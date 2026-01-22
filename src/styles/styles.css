@@ -1,0 +1,676 @@
+:root {
+  --bg: #0b0f0c;
+  --panel: rgba(15, 23, 42, 0.75);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+
+  --accent: #1d5a24;
+  --accent-strong: #2f8f3a;
+  --accent-soft: rgba(29, 90, 36, 0.25);
+}
+
+@media (max-width: 700px) {
+  .column-toggles {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+}
+
+/* ---------- BASE ---------- */
+body {
+  background: radial-gradient(circle at top, #0f1a12, #060a08);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  margin: 0;
+}
+
+.app {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px;
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Left side (title + tabs) */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- MENU WRAPPER ---------- */
+.menu-wrapper {
+  position: relative;   /* IMPORTANT */
+}
+
+/* three-dot button */
+.icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.icon-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ---------- GLASS CARD ---------- */
+.glass-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tabs button {
+  background: rgba(255,255,255,0.08);
+  font-size: 14px;
+  min-width: 90px;
+  height: 30px;
+  color: var(--text);
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: var(--accent);
+}
+
+.tabs button:hover {
+  background: var(--accent-strong);
+}
+
+/* ---------- PLAN TABS ---------- */
+.plan-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.plan-tab-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.plan-tab {
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-weight: 600;
+  color: var(--text);
+  height: 20px;
+}
+
+.plan-tab.active {
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+/* ---------- PROFILE ---------- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+}
+
+/* ---------- MEALS ---------- */
+.meal-name-input {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.meal-header,
+.meal-row,
+.meal-total {
+  display: grid;
+  grid-template-columns: 2fr 90px repeat(4, 70px) 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+.meal-header {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.meal-row {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.meal-row:last-child {
+  border-bottom: none;
+}
+
+.meal-total {
+  font-weight: 600;
+  opacity: 0.9;
+  margin-top: 6px;
+}
+
+/* ---------- INPUTS ---------- */
+input,
+select {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  color: var(--text);
+  padding: 4px 6px;
+  height: 28px;
+  text-align: center;
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button.danger {
+  background: transparent;
+  color: rgb(214, 17, 17);
+}
+
+button.danger:hover {
+  background: #690202;
+}
+
+/* ---------- FLOATING MENU ---------- */
+.menu.floating {
+  position: absolute;          /* anchored to button */
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+
+  z-index: 9999;
+  background: rgba(20,30,25,0.96);
+  backdrop-filter: blur(14px);
+
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 190px;
+
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+/* menu items */
+.menu.floating button,
+.menu.floating label {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 8px 12px;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.menu.floating button:hover,
+.menu.floating label:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.menu.floating hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+
+/* danger items */
+.menu.floating .danger {
+  background: #991b1b;
+  color: white;
+}
+
+.menu.floating .danger:hover {
+  background: #dc2626;
+}
+
+.daily-summary {
+  margin-top: 24px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(4, minmax(70px, 1fr));
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+}
+
+.summary-grid input {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  text-align: center;
+}
+
+.row-label {
+  text-align: left;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* proximity colors */
+.hit {
+  color: #22c55e;        /* green */
+  font-weight: 600;
+}
+
+.close {
+  color: #eab308;        /* yellow */
+}
+
+.off {
+  color: #ef4444;        /* red */
+}
+
+/* ---------- MEAL MENU FIX ---------- */
+.meal-menu-wrapper {
+  position: relative;   /* THIS is the key */
+  display: flex;
+  align-items: center;
+}
+
+.meal-menu-wrapper .menu.floating {
+  top: 100%;
+  right: 0;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: 90px repeat(4, minmax(90px, 1fr));
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.summary-grid input {
+  width: 100%;
+  text-align: center;
+  padding: 6px 8px;
+}
+
+.summary-grid .row-label {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.meal-header,
+.meal-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr repeat(4, 0.5fr) 40px;
+  gap: 10px;
+  align-items: center;
+}
+.meal-row select {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu-anchor {
+  position: relative;
+}
+
+/* ---------- MENU (THE IMPORTANT PART) ---------- */
+.menu-anchor {
+  position: relative; /* THIS is the anchor */
+}
+
+.menu.floating {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+
+  z-index: 9999;
+  background: rgba(20,30,25,0.97);
+  backdrop-filter: blur(14px);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 180px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.menu.floating button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 8px 12px;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.menu.floating button:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.menu.floating .danger {
+  background: #991b1b;
+  color: white;
+}
+
+.meal-header-row {
+  display: flex;
+  justify-content: space-between; /* This pushes the items to opposite ends */
+  align-items: center; /* This aligns them vertically in the middle */
+}
+
+.meal-name-input {
+  /* You might want to add some margin or width control here */
+  flex-grow: 1; /* Allows the input to take up the remaining space */
+  margin-right: 10px; /* Adds a small gap between the input and the menu button */
+}
+
+/* Paste nutrition label */
+
+.label-import {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.label-import textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.label-import textarea:focus {
+  outline: none;
+  border-color: #2f8f3a;
+}
+
+
+/* ==============================
+   Base
+============================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(ellipse at top, #1a2a1a 0%, #070a07 60%);
+  color: #fff;
+}
+
+/* ==============================
+   Glass Card
+============================== */
+
+.glass-card {
+  background: rgba(15, 20, 15, 0.65);
+  backdrop-filter: blur(18px);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ==============================
+   Products Table
+============================== */
+
+.products-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+/* Shared grid for header + rows */
+.products-header,
+.products-row {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 2.5fr)  /* Item Name */
+    minmax(70px, 0.8fr)   /* Serving */
+    minmax(70px, 0.8fr)   /* Unit */
+    minmax(70px, 0.8fr)   /* Calories */
+    minmax(60px, 0.6fr)   /* Protein */
+    minmax(60px, 0.6fr)   /* Carbs */
+    minmax(60px, 0.6fr)   /* Fat */
+    70px;                 /* Actions */
+
+  align-items: center;
+  column-gap: 7px;
+}
+
+/* ==============================
+   Header
+============================== */
+
+.products-header {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ==============================
+   Rows
+============================== */
+
+.products-row {
+  padding: 4px 10px;
+  border-radius: 14px;
+}
+
+/* ==============================
+   Cells
+============================== */
+
+.products-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* Name column emphasis */
+.product-name input {
+  height: 42px;
+  font-size: 15px;
+}
+
+/* ==============================
+   Inputs
+============================== */
+
+.products-row input,
+.products-row select {
+  width: 100%;
+  height: 38px;
+  padding: 6px 10px;
+
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+
+  font-size: 14px;
+}
+
+.products-row input[type="number"] {
+  text-align: center;
+  padding: 6px 6px;
+}
+
+/* ==============================
+   Actions
+============================== */
+
+.products-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.products-actions button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Copy button */
+.btn-copy {
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+}
+
+/* Remove button */
+.btn-remove {
+  background: #b71c1c;
+  color: #fff;
+  border: none;
+}
+
+/* ==============================
+   Add Product Button
+============================== */
+
+.add-product-btn {
+  margin-top: 12px;
+  padding: 10px 18px;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ==============================
+   Mobile
+============================== */
+
+@media (max-width: 768px) {
+  .products-header,
+  .products-row {
+    column-gap: 10px;
+  }
+
+  .products-row input,
+  .products-row select {
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+.products-table {
+  position: relative;
+  overflow-x: auto;
+}
+
+.products-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(10, 14, 12, 0.95);
+  backdrop-filter: blur(6px);
+}
+
+.sort-row {
+  align-content: flex-end;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(20, 20, 20, 0.9);
+  color: white;
+  font-size: 14px;
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+}
+
+.import-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: rgba(80, 180, 120, 0.15);
+  color: #1e7f4f;
+  font-size: 14px;
+}
+
+.import-banner button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
