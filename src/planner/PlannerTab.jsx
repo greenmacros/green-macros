@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { compressToEncodedURIComponent } from "lz-string";
 
-
 /* ---------- helpers ---------- */
 function calcMacros(product, amount) {
   if (!product) return { cal: 0, protein: 0, carbs: 0, fat: 0 };
@@ -49,14 +48,42 @@ const emptyPlan = {
 /* ---------- component ---------- */
 export default function PlannerTab({ products, plannerState, setPlannerState}) {
   const { plans, activePlanId } = plannerState;
-  const activePlan = plans.find(p => p.id === activePlanId);
-  const mealPlan = activePlan.data;
+  const activePlan =
+    plans.find(p => p.id === activePlanId) || plans[0];
+
+  if (!activePlan) {
+    return <div>No plan available</div>;
+  }
+
+  const planData = activePlan.data;
+
+  const mealPlan = activePlan?.data ?? structuredClone(emptyPlan);
+  if (!activePlan || !mealPlan) {
+    return null; // or a loading skeleton
+  }
 
   const [openPlanMenu, setOpenPlanMenu] = useState(null);
   const [openMealMenu, setOpenMealMenu] = useState(null);
   const [editingPlanId, setEditingPlanId] = useState(null);
   const menuRef = useRef(null);
   const [toast, setToast] = useState(null);
+
+
+  useEffect(() => {
+    if (!plannerState.plans.length) return;
+
+    const exists = plannerState.plans.some(
+      p => p.id === plannerState.activePlanId
+    );
+
+    if (!exists) {
+      setPlannerState(s => ({
+        ...s,
+        activePlanId: s.plans[0].id
+      }));
+    }
+  }, [plannerState.plans]);
+
 
   useEffect(() => {
     function close(e) {
@@ -77,12 +104,6 @@ export default function PlannerTab({ products, plannerState, setPlannerState}) {
       )
     }));
   }
-
-    {toast && (
-    <div className="toast">
-      {toast}
-    </div>
-  )}
 
     useEffect(() => {
     if (!toast) return;
@@ -192,6 +213,11 @@ export default function PlannerTab({ products, plannerState, setPlannerState}) {
   /* ---------- render ---------- */
   return (
     <div className="planner">
+              {toast && (
+        <div className="toast">
+          {toast}
+        </div>
+      )}
       {/* PLAN TABS */}
       <div className="plan-tabs">
         {plans.map(p => (
