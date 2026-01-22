@@ -167,7 +167,15 @@ useEffect(() => {
     );
 
     if (parsed.products) setProducts(parsed.products);
-    if (parsed.plannerState) setPlannerState(parsed.plannerState);
+    if (parsed.plannerState?.plans?.length) {
+      setPlannerState({
+        ...parsed.plannerState,
+        activePlanId:
+          parsed.plannerState.activePlanId ??
+          parsed.plannerState.plans[0].id
+      });
+    }
+
 
     setImportedFromLink(true);
     window.history.replaceState({}, "", window.location.pathname);
