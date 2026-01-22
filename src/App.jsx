@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
 import { decompressFromEncodedURIComponent } from "lz-string";
+import { compressToEncodedURIComponent } from "lz-string";
+
 
 export function safeDecodeState(param) {
   if (!param) return null;
@@ -135,58 +137,44 @@ export default function App() {
 
   /* Link-share */
   function handleShareLink() {
-   const payload = {
-     data: {
-       products,
-       planner,
-     },
-   };
+  const payload = {
+    products,
+    plannerState,
+  };
 
+  const compressed = compressToEncodedURIComponent(
+    JSON.stringify(payload)
+  );
 
-    const compressed = compressToEncodedURIComponent(
-      JSON.stringify(payload)
+  const url =
+    window.location.origin +
+    window.location.pathname +
+    "?data=" +
+    compressed;
+
+  navigator.clipboard.writeText(url);
+  alert("🔗 Shareable link copied!");
+}
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const data = params.get("data");
+  if (!data) return;
+
+  try {
+    const parsed = JSON.parse(
+      decompressFromEncodedURIComponent(data)
     );
 
-    const url =
-      window.location.origin +
-      window.location.pathname +
-      "?data=" +
-      compressed;
+    if (parsed.products) setProducts(parsed.products);
+    if (parsed.plannerState) setPlannerState(parsed.plannerState);
 
-    navigator.clipboard.writeText(url);
-    alert("🔗 Shareable link copied!");
+    setImportedFromLink(true);
+    window.history.replaceState({}, "", window.location.pathname);
+  } catch (e) {
+    console.error("Failed to import shared link", e);
   }
-
-   const decoded = safeDecodeState(urlData);
-
-   if (decoded?.data) {
-     setProducts(decoded.data.products ?? []);
-     setPlanner(decoded.data.planner ?? null);
-     setImportedFromLink(true);
-   }
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const data = params.get("data");
-
-    if (!data) return;
-
-    try {
-      const parsed = JSON.parse(
-        decompressFromEncodedURIComponent(data)
-      );
-
-      if (parsed.products) setProducts(parsed.products);
-      if (parsed.plannerState) setPlannerState(parsed.plannerState);
-
-      setImportedFromLink(true);
-
-      // Clean URL after import
-      window.history.replaceState({}, "", window.location.pathname);
-    } catch (e) {
-      console.error("Failed to import shared link", e);
-    }
-  }, []);
+}, []);
 
 
   /* ===============================
