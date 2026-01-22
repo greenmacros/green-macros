@@ -3,6 +3,18 @@ import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
 import { decompressFromEncodedURIComponent } from "lz-string";
 
+export function safeDecodeState(param) {
+  if (!param) return null;
+
+  try {
+    const json = decompressFromEncodedURIComponent(param);
+    if (!json) return null;
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 /* ===============================
    Storage helpers
 ================================ */
@@ -123,10 +135,13 @@ export default function App() {
 
   /* Link-share */
   function handleShareLink() {
-    const payload = {
-      products,
-      plannerState
-    };
+   const payload = {
+     data: {
+       products,
+       planner,
+     },
+   };
+
 
     const compressed = compressToEncodedURIComponent(
       JSON.stringify(payload)
@@ -141,6 +156,14 @@ export default function App() {
     navigator.clipboard.writeText(url);
     alert("🔗 Shareable link copied!");
   }
+
+   const decoded = safeDecodeState(urlData);
+
+   if (decoded?.data) {
+     setProducts(decoded.data.products ?? []);
+     setPlanner(decoded.data.planner ?? null);
+     setImportedFromLink(true);
+   }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -221,12 +244,11 @@ export default function App() {
     <header className="topbar">
       <div className="topbar-left">
         <h1>GreenMacros</h1>
-        {importedFromLink && (
-          <div className="import-banner">
-            ✅ Plan loaded from shared link
-            <button onClick={() => setImportedFromLink(false)}>×</button>
-          </div>
-        )}
+            {importedFromLink && (
+              <div className="import-banner">
+                Plan imported from link
+              </div>
+            )}
 
         <div className="tabs">
           <button
