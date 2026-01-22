@@ -1,3 +1,24 @@
+# GreenMacros 🌱
+
+Free, open-source macro planner focused on plant-based nutrition.
+
+- No accounts
+- No paywalls
+- No tracking
+- Works offline
+- Share plans with a link
+
+## Features
+- Product database
+- Nutrition label parsing
+- Open Food Facts import
+- Smart macro planning
+- Shareable links
+
+Built with React + Vite.
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
