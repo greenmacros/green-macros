@@ -7,6 +7,40 @@ import Footer from "./components/Footer";
 import FirstRunModal from "./components/FirstRunModal";
 import { createStarterPreset } from "./utils/presets";
 
+/* =========================
+   Preset helpers
+========================= */
+const placeholderItems = (count) =>
+  Array.from({ length: count }, () => ({
+    id: crypto.randomUUID(),
+    productId: null,
+    amount: 0,
+    note: "Enter an item on the Products tab",
+  }));
+
+const createStarterPlans = () => {
+  return [
+    {
+      id: crypto.randomUUID(),
+      name: "Workout Day",
+      meals: [
+        { id: crypto.randomUUID(), name: "Breakfast", items: placeholderItems(3) },
+        { id: crypto.randomUUID(), name: "Lunch", items: placeholderItems(3) },
+        { id: crypto.randomUUID(), name: "Post Workout", items: placeholderItems(1) },
+        { id: crypto.randomUUID(), name: "Dinner", items: placeholderItems(3) },
+      ],
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "Rest Day",
+      meals: [
+        { id: crypto.randomUUID(), name: "Breakfast", items: placeholderItems(3) },
+        { id: crypto.randomUUID(), name: "Lunch", items: placeholderItems(3) },
+        { id: crypto.randomUUID(), name: "Dinner", items: placeholderItems(3) },
+      ],
+    },
+  ];
+};
 
 /* ===============================
    Storage helpers
