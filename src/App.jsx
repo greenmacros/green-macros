@@ -3,19 +3,10 @@ import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
 import { decompressFromEncodedURIComponent } from "lz-string";
 import { compressToEncodedURIComponent } from "lz-string";
+import Footer from "./components/Footer";
+import FirstRunModal from "./components/FirstRunModal";
+import { createStarterPreset } from "./utils/presets";
 
-
-export function safeDecodeState(param) {
-  if (!param) return null;
-
-  try {
-    const json = decompressFromEncodedURIComponent(param);
-    if (!json) return null;
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
 
 /* ===============================
    Storage helpers
@@ -112,6 +103,10 @@ export default function App() {
     loadFromStorage(STORAGE_KEYS.planner, defaultPlannerState)
   );
 
+  const [showFirstRun, setShowFirstRun] = useState(
+  !localStorage.getItem("gm_hasVisited")
+);
+
   const [importedFromLink, setImportedFromLink] = useState(false);
   /* Ensure activePlanId exists */
   useEffect(() => {
@@ -136,10 +131,11 @@ export default function App() {
   }, [plannerState]);
 
   /* Link-share */
-  function handleShareLink() {
+function handleShareLink() {
   const payload = {
-    products,
-    plannerState,
+    p: products,
+    pl: plannerState.plans,
+    a: plannerState.activePlanId
   };
 
   const compressed = compressToEncodedURIComponent(
@@ -149,35 +145,46 @@ export default function App() {
   const url =
     window.location.origin +
     window.location.pathname +
-    "?data=" +
+    "?s=" +
     compressed;
 
   navigator.clipboard.writeText(url);
   alert("🔗 Shareable link copied!");
 }
 
+
+function startFresh() {
+  localStorage.setItem("gm_hasVisited", "1");
+  setShowFirstRun(false);
+}
+
+function loadPreset() {
+  const preset = createStarterPreset();
+  setPlannerState(preset);
+  localStorage.setItem("gm_hasVisited", "1");
+  setShowFirstRun(false);
+}
+
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
-  const data = params.get("data");
-  if (!data) return;
+  const s = params.get("s");
+  if (!s) return;
 
   try {
     const parsed = JSON.parse(
-      decompressFromEncodedURIComponent(data)
+      decompressFromEncodedURIComponent(s)
     );
 
-    if (parsed.products) setProducts(parsed.products);
-    if (parsed.plannerState?.plans?.length) {
+    if (parsed.p) setProducts(parsed.p);
+    if (parsed.pl?.length) {
       setPlannerState({
-        ...parsed.plannerState,
-        activePlanId:
-          parsed.plannerState.activePlanId ??
-          parsed.plannerState.plans[0].id
+        plans: parsed.pl,
+        activePlanId: parsed.a ?? parsed.pl[0].id
       });
     }
 
-
     setImportedFromLink(true);
+    localStorage.setItem("gm_hasVisited", "1");
     window.history.replaceState({}, "", window.location.pathname);
   } catch (e) {
     console.error("Failed to import shared link", e);
@@ -237,6 +244,13 @@ useEffect(() => {
 
   return (
     <div className="app">
+      {showFirstRun && (
+      <FirstRunModal
+        onFresh={startFresh}
+        onPreset={loadPreset}
+      />
+    )}
+
     <header className="topbar">
       <div className="topbar-left">
         <h1>GreenMacros</h1>
@@ -365,22 +379,7 @@ useEffect(() => {
       {tab === "products" && (
         <ProductsTab products={products} setProducts={setProducts} />
       )}
-
-      {/* ===============================
-          FOOTER
-      ================================ */}
-      <footer className="app-footer">
-        <p>
-          Built with plant-based nutrition in mind 🌱  
-          Today is a great day to start!
-
-        </p>
-        <p>
-          <strong>Free. Open Source.</strong> No paywalls, no subscriptions,
-          no “Pro” modes — just a simple tool that runs on plants.
-        </p>
-      </footer>
-
+      <Footer />
     </div>
   );
 }

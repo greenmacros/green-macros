@@ -343,6 +343,11 @@ export default function ProductsTab({ products, setProducts }) {
             </button>
           </div>
         )}
+        <p className="note">
+          ⚠️ Preloaded values are approximate. Always verify nutrition labels.
+          GreenMacros is a planning tool, not medical advice.
+        </p>
+
       </div>
     </div>
   );
