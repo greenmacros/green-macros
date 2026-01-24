@@ -11,35 +11,40 @@ import FirstRunModal from "./components/FirstRunModal";
 ========================= */
 const placeholderItems = (count) =>
   Array.from({ length: count }, () => ({
-    id: crypto.randomUUID(),
     productId: null,
-    amount: 0,
-    note: "Enter an item on the Products tab",
+    amount: 0
   }));
 
-const createStarterPlans = () => {
+function createStarterPlans() {
   return [
     {
       id: crypto.randomUUID(),
       name: "Workout Day",
-      meals: [
-        { id: crypto.randomUUID(), name: "Breakfast", items: placeholderItems(3) },
-        { id: crypto.randomUUID(), name: "Lunch", items: placeholderItems(3) },
-        { id: crypto.randomUUID(), name: "Post Workout", items: placeholderItems(1) },
-        { id: crypto.randomUUID(), name: "Dinner", items: placeholderItems(3) },
-      ],
+      data: {
+        profile: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        meals: [
+          { name: "Breakfast", items: placeholderItems(3) },
+          { name: "Lunch", items: placeholderItems(3) },
+          { name: "Post Workout", items: placeholderItems(1) },
+          { name: "Dinner", items: placeholderItems(3) }
+        ]
+      }
     },
     {
       id: crypto.randomUUID(),
       name: "Rest Day",
-      meals: [
-        { id: crypto.randomUUID(), name: "Breakfast", items: placeholderItems(3) },
-        { id: crypto.randomUUID(), name: "Lunch", items: placeholderItems(3) },
-        { id: crypto.randomUUID(), name: "Dinner", items: placeholderItems(3) },
-      ],
-    },
+      data: {
+        profile: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        meals: [
+          { name: "Breakfast", items: placeholderItems(3) },
+          { name: "Lunch", items: placeholderItems(3) },
+          { name: "Dinner", items: placeholderItems(3) }
+        ]
+      }
+    }
   ];
-};
+}
+
 
 /* ===============================
    Storage helpers

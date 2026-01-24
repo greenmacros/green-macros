@@ -55,8 +55,6 @@ export default function PlannerTab({ products, plannerState, setPlannerState}) {
     return <div>No plan available</div>;
   }
 
-  const planData = activePlan.data;
-
   const mealPlan = activePlan?.data ?? structuredClone(emptyPlan);
   if (!activePlan || !mealPlan) {
     return null; // or a loading skeleton
