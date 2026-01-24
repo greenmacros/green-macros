@@ -5,7 +5,6 @@ import { decompressFromEncodedURIComponent } from "lz-string";
 import { compressToEncodedURIComponent } from "lz-string";
 import Footer from "./components/Footer";
 import FirstRunModal from "./components/FirstRunModal";
-import { createStarterPreset } from "./utils/presets";
 
 /* =========================
    Preset helpers
@@ -193,11 +192,17 @@ function startFresh() {
 }
 
 function loadPreset() {
-  const preset = createStarterPreset();
-  setPlannerState(preset);
+  const plans = createStarterPlans();
+
+  setPlannerState({
+    plans,
+    activePlanId: plans[0].id
+  });
+
   localStorage.setItem("gm_hasVisited", "1");
   setShowFirstRun(false);
 }
+
 
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
