@@ -241,7 +241,7 @@ export default function App() {
   }, [plannerState]);
 
   /* Link-share */
-function handleShareLink() {
+async function handleShareLink() {
   const payload = [
     encodeProducts(products),
     encodePlans(plannerState.plans),
@@ -258,9 +258,15 @@ function handleShareLink() {
     "?s=" +
     compressed;
 
-  navigator.clipboard.writeText(url);
-  alert("🔗 Shareable link copied!");
+  try {
+    await navigator.clipboard.writeText(url);
+    alert("🔗 Link copied to clipboard!");
+  } catch {
+    // Fallback that ALWAYS works
+    prompt("Copy this link:", url);
+  }
 }
+
 
 
 function startFresh() {
