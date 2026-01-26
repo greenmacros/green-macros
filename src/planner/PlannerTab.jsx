@@ -199,10 +199,12 @@ function addItem(mealIndex) {
             idx === ii
               ? {
                   ...it,
-                  [field]:
-                    field === "amount"
-                      ? Number(value) || 0
-                      : value
+              [field]:
+                field === "amount"
+                  ? Number(value) || 0
+                  : field === "productId"
+                    ? Number(value)
+                    : value
                 }
               : it
             )
@@ -330,9 +332,12 @@ function addItem(mealIndex) {
                         mi,
                         ii,
                         "productId",
-                        e.target.value === PLACEHOLDER_ID ? PLACEHOLDER_ID : e.target.value
+                        e.target.value === PLACEHOLDER_ID
+                          ? PLACEHOLDER_ID
+                          : Number(e.target.value)
                       )
                     }
+                    
                     className={isPlaceholder ? "muted" : ""}
                   >
                     <option value={PLACEHOLDER_ID} disabled>
