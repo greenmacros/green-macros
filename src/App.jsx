@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
-import { decompressFromEncodedURIComponent } from "lz-string";
-import { compressToEncodedURIComponent } from "lz-string";
+import {  compressToEncodedURIComponent, decompressFromEncodedURIComponent} from "lz-string";
 import Footer from "./components/Footer";
 import FirstRunModal from "./components/FirstRunModal";
 
@@ -221,15 +220,15 @@ useEffect(() => {
       decompressFromEncodedURIComponent(s)
     );
 
-  const [p, plans, activeId] = parsed;
+    const [p, plans, activeId] = parsed;
 
-  if (p) setProducts(p);
-  if (plans?.length) {
-    setPlannerState({
-      plans,
-      activePlanId: activeId ?? plans[0].id
-    });
-  }
+    if (p) setProducts(p);
+    if (plans?.length) {
+      setPlannerState({
+        plans,
+        activePlanId: activeId ?? plans[0].id
+      });
+    }
 
     setImportedFromLink(true);
     localStorage.setItem("gm_hasVisited", "1");

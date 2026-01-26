@@ -190,29 +190,44 @@ function addItem(mealIndex) {
   updatePlan({ ...mealPlan, meals });
 }
 
-  function updateItem(mi, ii, field, value) {
-    const meals = mealPlan.meals.map((m, i) =>
-      i === mi
-        ? {
-            ...m,
-            items: m.items.map((it, idx) =>
-            idx === ii
-              ? {
-                  ...it,
+function updateItem(mi, ii, field, value) {
+  const meals = mealPlan.meals.map((m, i) =>
+    i !== mi
+      ? m
+      : {
+          ...m,
+          items: m.items.map((it, idx) => {
+            if (idx !== ii) return it;
+
+            let next = {
+              ...it,
               [field]:
                 field === "amount"
                   ? Number(value) || 0
                   : field === "productId"
-                    ? Number(value)
-                    : value
-                }
-              : it
-            )
-          }
-        : m
-    );
-    updatePlan({ ...mealPlan, meals });
-  }
+                  ? value
+                  : value
+            };
+            if (
+              field === "productId" &&
+              value !== PLACEHOLDER_ID &&
+              it.amount === 0
+            ) {
+              const product = products.find(
+                p => p.id === Number(value)
+              );
+              if (product) {
+                next.amount = product.servingGrams ?? 100;
+              }
+            }
+
+            return next;
+          })
+        }
+  );
+
+  updatePlan({ ...mealPlan, meals });
+}
 
   function removeItem(mi, ii) {
     const meals = mealPlan.meals.map((m, i) =>
@@ -337,7 +352,7 @@ function addItem(mealIndex) {
                           : Number(e.target.value)
                       )
                     }
-                    
+
                     className={isPlaceholder ? "muted" : ""}
                   >
                     <option value={PLACEHOLDER_ID} disabled>
