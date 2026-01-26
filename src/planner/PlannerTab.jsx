@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { compressToEncodedURIComponent } from "lz-string";
 
 /* ---------- helpers ---------- */
 function calcMacros(product, amount) {
@@ -25,14 +24,15 @@ function proximityClass(actual, target) {
 
 function sumFromRows(items, products) {
   return items.reduce(
-    (t, i) => {
-    const isPlaceholder = it.productId === "__EMPTY__";
-    const product = isPlaceholder
-      ? null
-      : products.find(p => p.id === it.productId);
+    (t, it) => {
+      const isPlaceholder = it.productId === "__EMPTY__";
+      const product = isPlaceholder
+        ? null
+        : products.find(p => p.id === it.productId);
 
       if (!product) return t;
-      const m = calcMacros(product, i.amount);
+
+      const m = calcMacros(product, it.amount);
       t.cal += m.cal;
       t.protein += m.protein;
       t.carbs += m.carbs;
