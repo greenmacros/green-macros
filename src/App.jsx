@@ -6,7 +6,47 @@ import Footer from "./components/Footer";
 import FirstRunModal from "./components/FirstRunModal";
 
 /* ===============================
-   Share encoding helpers (Level 1)
+   Plan share encoding (Level 1.5)
+================================ */
+
+function encodePlans(plans) {
+  return plans.map(plan => [
+    plan.id,
+    plan.name,
+    plan.meals.map(meal => [
+      meal.name,
+      meal.items.map(it => [
+        it.id,
+        it.productId,
+        it.amount,
+        it.note ?? ""
+      ])
+    ])
+  ]);
+}
+
+function decodePlans(arr) {
+  return arr.map(([id, name, meals]) => ({
+    id,
+    name,
+    meals: meals.map(([mealName, items]) => ({
+      name: mealName,
+      items: items.map(
+        ([iid, productId, amount, note]) => ({
+          id: iid,
+          productId,
+          amount,
+          note
+        })
+      )
+    }))
+  }));
+}
+
+
+
+/* ===============================
+   Share encoding helpers 
 ================================ */
 function encodeProducts(products) {
   return products.map(p => [
@@ -204,10 +244,9 @@ export default function App() {
 function handleShareLink() {
   const payload = [
     encodeProducts(products),
-    plannerState.plans,
+    encodePlans(plannerState.plans),
     plannerState.activePlanId
   ];
-
 
   const compressed = compressToEncodedURIComponent(
     JSON.stringify(payload)
@@ -252,10 +291,12 @@ useEffect(() => {
       decompressFromEncodedURIComponent(s)
     );
 
-    const [p, plans, activeId] = parsed;
+    const [p, encodedPlans, activeId] = parsed;
 
-  if (p) setProducts(decodeProducts(p));
-    if (plans?.length) {
+    if (p) setProducts(decodeProducts(p));
+
+    if (encodedPlans?.length) {
+      const plans = decodePlans(encodedPlans);
       setPlannerState({
         plans,
         activePlanId: activeId ?? plans[0].id
