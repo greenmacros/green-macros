@@ -43,8 +43,6 @@ function decodePlans(arr) {
   }));
 }
 
-
-
 /* ===============================
    Share encoding helpers 
 ================================ */
@@ -217,6 +215,13 @@ export default function App() {
   !localStorage.getItem("gm_hasVisited")
 );
 
+const [toast, setToast] = useState(null);
+
+function showToast(message) {
+  setToast(message);
+  setTimeout(() => setToast(null), 2500);
+}
+
   const [importedFromLink, setImportedFromLink] = useState(false);
   /* Ensure activePlanId exists */
   useEffect(() => {
@@ -260,14 +265,12 @@ async function handleShareLink() {
 
   try {
     await navigator.clipboard.writeText(url);
-    alert("🔗 Link copied to clipboard!");
+    showToast("🔗 Link copied to clipboard");
   } catch {
-    // Fallback that ALWAYS works
-    prompt("Copy this link:", url);
+    // guaranteed fallback
+    window.prompt("Copy this link:", url);
   }
 }
-
-
 
 function startFresh() {
   localStorage.setItem("gm_hasVisited", "1");
@@ -370,6 +373,12 @@ useEffect(() => {
 
   return (
     <div className="app">
+      {toast && (
+      <div className="toast">
+        {toast}
+      </div>
+      )}
+
       {showFirstRun && (
       <FirstRunModal
         onFresh={startFresh}
