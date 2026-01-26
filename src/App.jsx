@@ -5,6 +5,37 @@ import {  compressToEncodedURIComponent, decompressFromEncodedURIComponent} from
 import Footer from "./components/Footer";
 import FirstRunModal from "./components/FirstRunModal";
 
+/* ===============================
+   Share encoding helpers (Level 1)
+================================ */
+function encodeProducts(products) {
+  return products.map(p => [
+    p.id,
+    p.name,
+    p.cal ?? p.calories ?? 0,
+    p.protein ?? 0,
+    p.carbs ?? 0,
+    p.fat ?? 0,
+    p.servingGrams ?? 100
+  ]);
+}
+
+function decodeProducts(arr) {
+  return arr.map(
+    ([id, name, cal, protein, carbs, fat, servingGrams]) => ({
+      id,
+      name,
+      cal,
+      calories: cal, // support both usages
+      protein,
+      carbs,
+      fat,
+      servingGrams
+    })
+  );
+}
+
+
 /* =========================
    Preset helpers
 ========================= */
@@ -172,10 +203,11 @@ export default function App() {
   /* Link-share */
 function handleShareLink() {
   const payload = [
-    products,
+    encodeProducts(products),
     plannerState.plans,
     plannerState.activePlanId
   ];
+
 
   const compressed = compressToEncodedURIComponent(
     JSON.stringify(payload)
@@ -222,7 +254,7 @@ useEffect(() => {
 
     const [p, plans, activeId] = parsed;
 
-    if (p) setProducts(p);
+  if (p) setProducts(decodeProducts(p));
     if (plans?.length) {
       setPlannerState({
         plans,
