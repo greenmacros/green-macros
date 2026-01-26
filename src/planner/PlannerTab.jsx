@@ -196,7 +196,15 @@ function addItem(mealIndex) {
         ? {
             ...m,
             items: m.items.map((it, idx) =>
-              idx === ii ? { ...it, [field]: field === "amount" ? Number(value) || 0 : Number(value) } : it
+            idx === ii
+              ? {
+                  ...it,
+                  [field]:
+                    field === "amount"
+                      ? Number(value) || 0
+                      : value
+                }
+              : it
             )
           }
         : m
@@ -315,20 +323,29 @@ function addItem(mealIndex) {
 
               return (
                 <div key={it.id || ii} className="meal-row">
-                  {isPlaceholder ? (
-                    <div className="item-name muted">
+                  <select
+                    value={it.productId}
+                    onChange={e =>
+                      updateItem(
+                        mi,
+                        ii,
+                        "productId",
+                        e.target.value === PLACEHOLDER_ID ? PLACEHOLDER_ID : e.target.value
+                      )
+                    }
+                    className={isPlaceholder ? "muted" : ""}
+                  >
+                    <option value={PLACEHOLDER_ID} disabled>
                       Enter an item on the Products tab
-                    </div>
-                  ) : (
-                    <select
-                      value={it.productId}
-                      onChange={e => updateItem(mi, ii, "productId", e.target.value)}
-                    >
-                      {products.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  )}
+                    </option>
+
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+
 
                   <input
                     type="number"
