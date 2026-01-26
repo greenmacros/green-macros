@@ -11,8 +11,10 @@ import FirstRunModal from "./components/FirstRunModal";
 ========================= */
 const placeholderItems = (count) =>
   Array.from({ length: count }, () => ({
-    productId: null,
-    amount: 0
+    id: crypto.randomUUID(),
+    productId: "__EMPTY__",
+    amount: 0,
+    note: "Enter an item on the Products tab"
   }));
 
 function createStarterPlans() {
@@ -170,11 +172,11 @@ export default function App() {
 
   /* Link-share */
 function handleShareLink() {
-  const payload = {
-    p: products,
-    pl: plannerState.plans,
-    a: plannerState.activePlanId
-  };
+  const payload = [
+    products,
+    plannerState.plans,
+    plannerState.activePlanId
+  ];
 
   const compressed = compressToEncodedURIComponent(
     JSON.stringify(payload)
@@ -219,13 +221,15 @@ useEffect(() => {
       decompressFromEncodedURIComponent(s)
     );
 
-    if (parsed.p) setProducts(parsed.p);
-    if (parsed.pl?.length) {
-      setPlannerState({
-        plans: parsed.pl,
-        activePlanId: parsed.a ?? parsed.pl[0].id
-      });
-    }
+  const [p, plans, activeId] = parsed;
+
+  if (p) setProducts(p);
+  if (plans?.length) {
+    setPlannerState({
+      plans,
+      activePlanId: activeId ?? plans[0].id
+    });
+  }
 
     setImportedFromLink(true);
     localStorage.setItem("gm_hasVisited", "1");

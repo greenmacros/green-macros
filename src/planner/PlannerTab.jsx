@@ -26,9 +26,13 @@ function proximityClass(actual, target) {
 function sumFromRows(items, products) {
   return items.reduce(
     (t, i) => {
-      const p = products.find(p => p.id === i.productId);
-      if (!p) return t;
-      const m = calcMacros(p, i.amount);
+    const isPlaceholder = it.productId === "__EMPTY__";
+    const product = isPlaceholder
+      ? null
+      : products.find(p => p.id === it.productId);
+
+      if (!product) return t;
+      const m = calcMacros(product, i.amount);
       t.cal += m.cal;
       t.protein += m.protein;
       t.carbs += m.carbs;
@@ -44,6 +48,7 @@ const emptyPlan = {
   meals: [{ name: "Meal 1", items: [] }]
 };
 
+const PLACEHOLDER_ID = "__EMPTY__";
 
 /* ---------- component ---------- */
 export default function PlannerTab({ products, plannerState, setPlannerState}) {
@@ -165,15 +170,25 @@ export default function PlannerTab({ products, plannerState, setPlannerState}) {
   }
 
   /* ---------- item actions ---------- */
-  function addItem(mealIndex) {
-    if (!products.length) return;
-    const meals = mealPlan.meals.map((m, i) =>
-      i === mealIndex
-        ? { ...m, items: [...m.items, { productId: products[0].id, amount: products[0].servingGrams }] }
-        : m
-    );
-    updatePlan({ ...mealPlan, meals });
-  }
+function addItem(mealIndex) {
+  const meals = mealPlan.meals.map((m, i) =>
+    i === mealIndex
+      ? {
+          ...m,
+          items: [
+            ...m.items,
+            {
+              id: crypto.randomUUID(),
+              productId: PLACEHOLDER_ID,
+              amount: 0,
+              note: "Enter an item on the Products tab",
+            },
+          ],
+        }
+      : m
+  );
+  updatePlan({ ...mealPlan, meals });
+}
 
   function updateItem(mi, ii, field, value) {
     const meals = mealPlan.meals.map((m, i) =>
@@ -291,23 +306,47 @@ export default function PlannerTab({ products, plannerState, setPlannerState}) {
             </div>
 
             {meal.items.map((it, ii) => {
-              const p = products.find(pr => pr.id === it.productId);
-              const m = calcMacros(p, it.amount);
+              const isPlaceholder = it.productId === PLACEHOLDER_ID;
+              const product = isPlaceholder
+                ? null
+                : products.find(p => p.id === it.productId);
+
+              const m = calcMacros(product, it.amount);
 
               return (
-                <div key={ii} className="meal-row">
-                  <select value={it.productId} onChange={e => updateItem(mi, ii, "productId", e.target.value)}>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <input type="number" value={it.amount} onChange={e => updateItem(mi, ii, "amount", e.target.value)} />
+                <div key={it.id || ii} className="meal-row">
+                  {isPlaceholder ? (
+                    <div className="item-name muted">
+                      Enter an item on the Products tab
+                    </div>
+                  ) : (
+                    <select
+                      value={it.productId}
+                      onChange={e => updateItem(mi, ii, "productId", e.target.value)}
+                    >
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  <input
+                    type="number"
+                    value={it.amount}
+                    onChange={e => updateItem(mi, ii, "amount", e.target.value)}
+                    disabled={isPlaceholder}
+                  />
+
                   <div>{m.cal.toFixed(0)}</div>
                   <div>{m.protein.toFixed(1)}</div>
                   <div>{m.carbs.toFixed(1)}</div>
                   <div>{m.fat.toFixed(1)}</div>
+
                   <button className="danger" onClick={() => removeItem(mi, ii)}>✕</button>
                 </div>
               );
             })}
+
             <button onClick={() => addItem(mi)}>＋</button>
 
             <div className="meal-total">
