@@ -207,9 +207,20 @@ export default function App() {
     loadFromStorage(STORAGE_KEYS.products, defaultProducts)
   );
 
-  const [plannerState, setPlannerState] = useState(() =>
-    loadFromStorage(STORAGE_KEYS.planner, defaultPlannerState)
-  );
+  const [plannerState, setPlannerState] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = params.get("p");
+
+    if (shared) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(shared));
+        return decoded;
+      } catch {
+        console.warn("Invalid shared plan in URL");
+      }
+    }
+    return loadFromStorage(STORAGE_KEYS.planner, defaultPlannerState);
+  });
 
   const [showFirstRun, setShowFirstRun] = useState(
   !localStorage.getItem("gm_hasVisited")
@@ -267,7 +278,6 @@ async function handleShareLink() {
     await navigator.clipboard.writeText(url);
     showToast("🔗 Link copied to clipboard");
   } catch {
-    // guaranteed fallback
     window.prompt("Copy this link:", url);
   }
 }
@@ -319,7 +329,6 @@ useEffect(() => {
     console.error("Failed to import shared link", e);
   }
 }, []);
-
 
   /* ===============================
      "..." menu logic
