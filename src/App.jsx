@@ -257,30 +257,35 @@ function showToast(message) {
   }, [plannerState]);
 
   /* Link-share */
-async function handleShareLink() {
-  const payload = [
-    encodeProducts(products),
-    encodePlans(plannerState.plans),
-    plannerState.activePlanId
-  ];
+const handleShareLink = () => {
+  const data = {
+    p: encodeProducts(products),
+    m: encodePlans(plannerState.plans),
+    v: "1.5"
+  };
+  const blob = compressToEncodedURIComponent(JSON.stringify(data));
+  const url = `${window.location.origin}${window.location.pathname}?s=${blob}`;
 
-  const compressed = compressToEncodedURIComponent(
-    JSON.stringify(payload)
-  );
-
-  const url =
-    window.location.origin +
-    window.location.pathname +
-    "?s=" +
-    compressed;
-
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast("🔗 Link copied to clipboard");
-  } catch {
-    window.prompt("Copy this link:", url);
+  // Try modern API first
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url)
+      .then(() => alert("Link copied to clipboard!"))
+      .catch(err => console.error("Failed to copy:", err));
+  } else {
+    // Fallback for non-HTTPS or failure
+    const textArea = document.createElement("textarea");
+    textArea.value = url;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert("Link copied to clipboard (fallback)!");
+    } catch (err) {
+      console.error("Fallback copy failed:", err);
+    }
+    document.body.removeChild(textArea);
   }
-}
+};
 
 function startFresh() {
   localStorage.setItem("gm_hasVisited", "1");
