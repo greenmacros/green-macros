@@ -712,6 +712,14 @@ body {
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
+/* === Macro color tokens === */
+:root {
+  --cal-color: #ffd166; /* yellow */
+  --protein-color: #6ee7b7; /* green */
+  --carbs-color: #93c5fd; /* blue */
+  --fat-color: #fca5a5; /* red */
+}
+
 .col-cal { color: #ffffff; }
 .col-p { color: #6ee7b7; }
 .col-c { color: #93c5fd; }
