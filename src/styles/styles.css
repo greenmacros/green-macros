@@ -711,3 +711,27 @@ body {
   z-index: 9999;
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
+
+/* Update these specific classes in your styles.css */
+
+.planner-row {
+  display: grid;
+  /* Reduced gap and tighter column widths */
+  grid-template-columns: 1.5fr 80px 60px 60px 60px 60px 60px 40px;
+  gap: 6px; 
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.planner-row input {
+  padding: 4px 6px; /* Tighter inputs */
+  font-size: 13px;
+}
+
+/* Make the summary row (Daily Totals) match the new tightness */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 80px 60px 60px 60px 60px 60px 40px;
+  gap: 6px;
+  padding: 10px 8px;
+}

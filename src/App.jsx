@@ -21,16 +21,29 @@ function encodePlans(plans) {
         it.amount,
         it.note ?? ""
       ])
-    ])
+    ]),
+    // New: include profile targets in the share link
+    [
+      plan.data?.profile?.calories || 0,
+      plan.data?.profile?.protein || 0,
+      plan.data?.profile?.carbs || 0,
+      plan.data?.profile?.fat || 0
+    ]
   ]);
 }
 
 function decodePlans(arr) {
-  return arr.map(([id, name, meals]) => ({
+  return arr.map(([id, name, meals, profile]) => ({
     id,
     name,
     data: {
-      profile: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      // New: restore profile targets from the share link
+      profile: {
+        calories: profile?.[0] || 0,
+        protein: profile?.[1] || 0,
+        carbs: profile?.[2] || 0,
+        fat: profile?.[3] || 0
+      },
       meals: meals.map(([mealName, items]) => ({
         name: mealName,
         items: items.map(([iid, productId, amount, note]) => ({
@@ -266,6 +279,21 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+      const handleUrlChange = () => {
+        const s = new URLSearchParams(window.location.search).get("s");
+        if (s && window.confirm("A shared plan was detected in the URL. Overwrite your current data?")) {
+          processUrlImport();
+        }
+      };
+
+      window.addEventListener('popstate', handleUrlChange);
+      // Also check on boot if we aren't showing the FirstRun modal
+      if (!showFirstRun && hasShareInUrl) handleUrlChange();
+
+      return () => window.removeEventListener('popstate', handleUrlChange);
+    }, [showFirstRun]);
+    
   return (
     <div className="app">
       {toast && <div className="toast">{toast}</div>}
