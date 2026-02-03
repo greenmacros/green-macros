@@ -248,6 +248,13 @@ function updateItem(mi, ii, field, value) {
     { cal: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
+  const remaining = {
+    cal: mealPlan.profile.calories - dailyTotals.cal,
+    protein: mealPlan.profile.protein - dailyTotals.protein,
+    carbs: mealPlan.profile.carbs - dailyTotals.carbs,
+    fat: mealPlan.profile.fat - dailyTotals.fat,
+  };
+
   /* ---------- render ---------- */
   return (
     <div className="planner">
@@ -373,11 +380,11 @@ function updateItem(mi, ii, field, value) {
                     onChange={e => updateItem(mi, ii, "amount", e.target.value)}
                     disabled={isPlaceholder}
                   />
-
-                  <div>{m.cal.toFixed(0)}</div>
-                  <div>{m.protein.toFixed(1)}</div>
-                  <div>{m.carbs.toFixed(1)}</div>
-                  <div>{m.fat.toFixed(1)}</div>
+                  
+                  <div className="col-cal">{m.cal.toFixed(0)}</div>
+                  <div className="col-p">{m.protein.toFixed(1)}</div>
+                  <div className="col-c">{m.carbs.toFixed(1)}</div>
+                  <div className="col-f">{m.fat.toFixed(1)}</div>
 
                   <button className="danger" onClick={() => removeItem(mi, ii)}>✕</button>
                 </div>
@@ -386,16 +393,17 @@ function updateItem(mi, ii, field, value) {
 
             <button onClick={() => addItem(mi)}>＋</button>
 
-            <div className="meal-total">
-              <div>Total</div><div />
-              <div>{totals.cal.toFixed(0)}</div>
-              <div>{totals.protein.toFixed(1)}</div>
-              <div>{totals.carbs.toFixed(1)}</div>
-              <div>{totals.fat.toFixed(1)}</div>
-              <div />
+            <div className="meal-row meal-total">
+              <div className="muted">Meal total</div>
+              <div></div>
+
+              <div className="col-cal">Cal  {totals.cal.toFixed(0)} </div>
+              <div className="col-p">P {totals.protein.toFixed(1)}</div>
+              <div className="col-c">C {totals.carbs.toFixed(1)} </div>
+              <div className="col-f"> F {totals.fat.toFixed(1)}</div>
+
+              <div></div>
             </div>
-
-
           </section>
         );
       })}
@@ -475,6 +483,35 @@ function updateItem(mi, ii, field, value) {
 
             <div className={proximityClass(dailyTotals.fat, mealPlan.profile.fat)}>
               {dailyTotals.fat.toFixed(1)}
+            </div>
+            <div className="row-label">Remaining</div>
+
+            <div className={proximityClass(
+              mealPlan.profile.calories - remaining.cal,
+              mealPlan.profile.calories
+            )}>
+              {remaining.cal.toFixed(0)}
+            </div>
+
+            <div className={proximityClass(
+              mealPlan.profile.protein - remaining.protein,
+              mealPlan.profile.protein
+            )}>
+              {remaining.protein.toFixed(1)}
+            </div>
+
+            <div className={proximityClass(
+              mealPlan.profile.carbs - remaining.carbs,
+              mealPlan.profile.carbs
+            )}>
+              {remaining.carbs.toFixed(1)}
+            </div>
+
+            <div className={proximityClass(
+              mealPlan.profile.fat - remaining.fat,
+              mealPlan.profile.fat
+            )}>
+              {remaining.fat.toFixed(1)}
             </div>
           </div>
         </section>

@@ -712,33 +712,10 @@ body {
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
-/* Update these specific classes in your styles.css */
-
-.planner-row {
-  display: grid;
-  /* Reduced gap and tighter column widths */
-  grid-template-columns: 1.5fr 80px 60px 60px 60px 60px 60px 40px;
-  gap: 6px; 
-  align-items: center;
-  padding: 4px 8px;
-}
-
-.planner-row input {
-  padding: 4px 6px; /* Tighter inputs */
-  font-size: 13px;
-}
-/* === Macro color tokens === */
-:root {
-  --cal-color: #ffd166; /* yellow */
-  --protein-color: #6ee7b7; /* green */
-  --carbs-color: #93c5fd; /* blue */
-  --fat-color: #fca5a5; /* red */
-}
-
-.col-cal { color: #ffd166; }
+.col-cal { color: #ffffff; }
 .col-p { color: #6ee7b7; }
 .col-c { color: #93c5fd; }
-.col-f { color: #fca5a5; }
+.col-f { color: #ffd166; }
 
 .meal-totals span {
   margin-right: 12px;
@@ -747,6 +724,16 @@ body {
 }
 
 .remaining-row {
-  opacity: 0.85;
+  opacity: 0.6;
   font-style: italic;
+  font-size: 0.85rem;
+}
+
+.meal-totals {
+  opacity: 0.65;
+  font-size: 0.85rem;
+}
+.meal-totals,
+.remaining-row {
+  filter: saturate(0.75);
 }
