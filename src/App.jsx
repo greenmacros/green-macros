@@ -13,9 +13,10 @@ function encodePlans(plans) {
   return plans.map(plan => [
     plan.id,
     plan.name,
-    plan.meals.map(meal => [
+    // Access plan.data.meals instead of plan.meals
+    (plan.data?.meals || []).map(meal => [
       meal.name,
-      meal.items.map(it => [
+      (meal.items || []).map(it => [
         it.id,
         it.productId,
         it.amount,
@@ -29,17 +30,18 @@ function decodePlans(arr) {
   return arr.map(([id, name, meals]) => ({
     id,
     name,
-    meals: meals.map(([mealName, items]) => ({
-      name: mealName,
-      items: items.map(
-        ([iid, productId, amount, note]) => ({
+    data: { // Wrap meals and profile back into the data object
+      profile: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      meals: meals.map(([mealName, items]) => ({
+        name: mealName,
+        items: items.map(([iid, productId, amount, note]) => ({
           id: iid,
           productId,
           amount,
           note
-        })
-      )
-    }))
+        }))
+      }))
+    }
   }));
 }
 
