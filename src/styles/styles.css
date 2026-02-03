@@ -735,23 +735,17 @@ body {
   --fat-color: #fca5a5; /* red */
 }
 
-/* Column coloring */
-.col-cal { color: var(--cal-color); }
-.col-p { color: var(--protein-color); }
-.col-c { color: var(--carbs-color); }
-.col-f { color: var(--fat-color); }
+.col-cal { color: #ffd166; }
+.col-p { color: #6ee7b7; }
+.col-c { color: #93c5fd; }
+.col-f { color: #fca5a5; }
 
-/* Slight emphasis for totals */
-.totals-row .col-cal,
-.totals-row .col-p,
-.totals-row .col-c,
-.totals-row .col-f {
-  font-weight: 600;
-}
 .meal-totals span {
   margin-right: 12px;
   font-size: 0.9rem;
+  font-weight: 500;
 }
+
 .remaining-row {
   opacity: 0.85;
   font-style: italic;
