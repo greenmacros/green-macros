@@ -60,22 +60,20 @@ function encodeProducts(products) {
 }
 
 function decodeProducts(arr) {
-  return arr.map(
-    ([id, name, cal, protein, carbs, fat, servingGrams]) => ({
-      id,
-      name,
-      cal,
-      calories: cal, 
-      protein,
-      carbs,
-      fat,
-      servingGrams
-    })
-  );
+  return arr.map(([id, name, cal, protein, carbs, fat, servingGrams]) => ({
+    id,
+    name,
+    cal,
+    calories: cal,
+    protein,
+    carbs,
+    fat,
+    servingGrams
+  }));
 }
 
 /* =========================
-   Preset helpers
+   Preset & Storage helpers
 ========================= */
 const placeholderItems = (count) =>
   Array.from({ length: count }, () => ({
@@ -134,9 +132,7 @@ function saveToStorage(key, value) {
 }
 
 function downloadJSON(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json"
-  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -149,11 +145,8 @@ function readJSONFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
-      try {
-        resolve(JSON.parse(e.target.result));
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
+      try { resolve(JSON.parse(e.target.result)); } 
+      catch { reject(new Error("Invalid JSON")); }
     };
     reader.onerror = reject;
     reader.readAsText(file);
@@ -182,17 +175,68 @@ export default function App() {
   const [tab, setTab] = useState("planner");
   const [products, setProducts] = useState(() => loadFromStorage(STORAGE_KEYS.products, defaultProducts));
   const [plannerState, setPlannerState] = useState(() => loadFromStorage(STORAGE_KEYS.planner, defaultPlannerState));
-  
-  // Check if there is a shared data string in the URL
-  const hasShareInUrl = new URLSearchParams(window.location.search).has("s");
-  const [showFirstRun, setShowFirstRun] = useState(!localStorage.getItem("gm_hasVisited"));
   const [toast, setToast] = useState(null);
+  const [showFirstRun, setShowFirstRun] = useState(!localStorage.getItem("gm_hasVisited"));
   const [importedFromLink, setImportedFromLink] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const hasShareInUrl = new URLSearchParams(window.location.search).has("s");
 
   function showToast(message) {
     setToast(message);
     setTimeout(() => setToast(null), 2500);
   }
+
+  /* File Import logic (Restored) */
+  async function importProducts(file) {
+    try {
+      const data = await readJSONFile(file);
+      if (!Array.isArray(data)) throw new Error();
+      setProducts(data);
+      showToast("Products imported!");
+    } catch { showToast("Invalid products file"); }
+  }
+
+  async function importPlans(file) {
+    try {
+      const data = await readJSONFile(file);
+      if (!data.plans || !data.activePlanId) throw new Error();
+      setPlannerState(data);
+      showToast("Plans imported!");
+    } catch { showToast("Invalid plans file"); }
+  }
+
+  async function importAll(file) {
+    try {
+      const data = await readJSONFile(file);
+      if (!data.products || !data.plannerState) throw new Error();
+      setProducts(data.products);
+      setPlannerState(data.plannerState);
+      showToast("Full backup restored!");
+    } catch { showToast("Invalid backup file"); }
+  }
+
+  /* URL Share Import Handler */
+  const processUrlImport = () => {
+    const s = new URLSearchParams(window.location.search).get("s");
+    if (!s) return;
+    try {
+      const parsed = JSON.parse(decompressFromEncodedURIComponent(s));
+      if (parsed.p) setProducts(decodeProducts(parsed.p));
+      if (parsed.m) {
+        const plans = decodePlans(parsed.m);
+        setPlannerState({ plans, activePlanId: plans[0].id });
+      }
+      setImportedFromLink(true);
+      setShowFirstRun(false);
+      localStorage.setItem("gm_hasVisited", "1");
+      window.history.replaceState({}, "", window.location.pathname);
+      showToast("Imported from link!");
+    } catch {
+      showToast("Failed to decode shared link");
+    }
+  };
 
   /* Ensure activePlanId exists */
   useEffect(() => {
@@ -201,84 +245,26 @@ export default function App() {
     }
   }, []);
 
-  /* Auto-save */
   useEffect(() => { saveToStorage(STORAGE_KEYS.products, products); }, [products]);
   useEffect(() => { saveToStorage(STORAGE_KEYS.planner, plannerState); }, [plannerState]);
 
-  /* Link-share logic with Toast */
   const handleShareLink = () => {
-    const data = {
-      p: encodeProducts(products),
-      m: encodePlans(plannerState.plans),
-      v: "1.5"
-    };
+    const data = { p: encodeProducts(products), m: encodePlans(plannerState.plans), v: "1.5" };
     const blob = compressToEncodedURIComponent(JSON.stringify(data));
     const url = `${window.location.origin}${window.location.pathname}?s=${blob}`;
 
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(url)
-        .then(() => showToast("Link copied to clipboard!"))
-        .catch(err => console.error("Failed to copy:", err));
+      navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard!"));
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = url;
       document.body.appendChild(textArea);
       textArea.select();
-      try {
-        document.execCommand('copy');
-        showToast("Link copied (fallback)!");
-      } catch (err) {
-        console.error("Fallback copy failed:", err);
-      }
+      document.execCommand('copy');
       document.body.removeChild(textArea);
+      showToast("Link copied!");
     }
   };
-
-  /* Import Logic */
-  const processImport = () => {
-    const params = new URLSearchParams(window.location.search);
-    const s = params.get("s");
-    if (!s) return;
-
-    try {
-      const parsed = JSON.parse(decompressFromEncodedURIComponent(s));
-      if (parsed.p) setProducts(decodeProducts(parsed.p));
-      if (parsed.m?.length) {
-        const plans = decodePlans(parsed.m);
-        setPlannerState({ plans, activePlanId: plans[0].id });
-      }
-      setImportedFromLink(true);
-      localStorage.setItem("gm_hasVisited", "1");
-      setShowFirstRun(false);
-      window.history.replaceState({}, "", window.location.pathname);
-    } catch (e) {
-      console.error("Failed to import shared link", e);
-      showToast("Import failed: invalid link");
-    }
-  };
-
-  function startFresh() {
-    localStorage.setItem("gm_hasVisited", "1");
-    setShowFirstRun(false);
-  }
-
-  function loadPreset() {
-    const plans = createStarterPlans();
-    setPlannerState({ plans, activePlanId: plans[0].id });
-    localStorage.setItem("gm_hasVisited", "1");
-    setShowFirstRun(false);
-  }
-
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    function close(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, []);
 
   return (
     <div className="app">
@@ -286,9 +272,9 @@ export default function App() {
 
       {showFirstRun && (
         <FirstRunModal 
-          onFresh={startFresh} 
-          onPreset={loadPreset} 
-          onImport={hasShareInUrl ? processImport : null} 
+          onFresh={() => { localStorage.setItem("gm_hasVisited", "1"); setShowFirstRun(false); }}
+          onPreset={() => { setPlannerState({ plans: createStarterPlans(), activePlanId: null }); localStorage.setItem("gm_hasVisited", "1"); setShowFirstRun(false); }}
+          onImport={hasShareInUrl ? processUrlImport : null}
         />
       )}
 
@@ -302,15 +288,16 @@ export default function App() {
           </div>
 
           <div className="menu-wrapper" ref={menuRef}>
-            <button className="icon-btn" onClick={() => setMenuOpen(v => !v)}>⋯</button>
+            <button className="icon-btn" onClick={() => setMenuOpen(!menuOpen)}>⋯</button>
             {menuOpen && (
               <div className="menu floating">
                 <button onClick={() => downloadJSON(products, "products.json")}>Export Products</button>
                 <button onClick={() => downloadJSON(plannerState, "plans.json")}>Export Plans</button>
-                <button onClick={() => downloadJSON({ products, plannerState }, "full-backup.json")}>Export Backup</button>
+                <button onClick={() => downloadJSON({ products, plannerState }, "full-backup.json")}>Export Full Backup</button>
                 <hr />
-                <label className="menu-file">Import Products <input type="file" accept="application/json" hidden onChange={e => e.target.files[0] && readJSONFile(e.target.files[0]).then(setProducts) && setMenuOpen(false)} /></label>
-                <label className="menu-file">Import Plans <input type="file" accept="application/json" hidden onChange={e => e.target.files[0] && readJSONFile(e.target.files[0]).then(setPlannerState) && setMenuOpen(false)} /></label>
+                <label className="menu-file">Import Products <input type="file" accept="application/json" hidden onChange={e => e.target.files[0] && importProducts(e.target.files[0])} /></label>
+                <label className="menu-file">Import Plans <input type="file" accept="application/json" hidden onChange={e => e.target.files[0] && importPlans(e.target.files[0])} /></label>
+                <label className="menu-file">Import Full Backup <input type="file" accept="application/json" hidden onChange={e => e.target.files[0] && importAll(e.target.files[0])} /></label>
               </div>
             )}
           </div>
