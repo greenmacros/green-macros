@@ -266,7 +266,7 @@ export default function ProductsTab({ products, setProducts }) {
       {/* Products table */}
       <div className="products-table-scroll">
         <div className="products-header products-row">
-          <div>Name</div><div>Serving</div><div>Unit</div><div>Cal</div><div>Protein</div><div>Carbs</div><div>Fat</div><div />
+          <div>Name</div><div>Serving</div><div>Unit</div><div>Calories</div><div>Protein</div><div>Carbs</div><div>Fat</div><div />
         </div>
         {products.map((p, i) => (
           <div key={p.id} className="products-row">

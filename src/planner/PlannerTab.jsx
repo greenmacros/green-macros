@@ -334,7 +334,7 @@ function updateItem(mi, ii, field, value) {
 
 
             <div className="meal-header">
-              <div>Item</div><div>Amount</div><div>Cal</div><div>P</div><div>C</div><div>F</div><div />
+              <div>Item</div><div>Amount</div><div>Calories</div><div>Protein</div><div>Carbs</div><div>Fat</div><div />
             </div>
 
             {meal.items.map((it, ii) => {
