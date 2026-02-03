@@ -293,7 +293,7 @@ export default function App() {
 
       return () => window.removeEventListener('popstate', handleUrlChange);
     }, [showFirstRun]);
-    
+
   return (
     <div className="app">
       {toast && <div className="toast">{toast}</div>}

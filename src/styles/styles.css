@@ -727,11 +727,32 @@ body {
   padding: 4px 6px; /* Tighter inputs */
   font-size: 13px;
 }
+/* === Macro color tokens === */
+:root {
+  --cal-color: #ffd166; /* yellow */
+  --protein-color: #6ee7b7; /* green */
+  --carbs-color: #93c5fd; /* blue */
+  --fat-color: #fca5a5; /* red */
+}
 
-/* Make the summary row (Daily Totals) match the new tightness */
-.summary-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 80px 60px 60px 60px 60px 60px 40px;
-  gap: 6px;
-  padding: 10px 8px;
+/* Column coloring */
+.col-cal { color: var(--cal-color); }
+.col-p { color: var(--protein-color); }
+.col-c { color: var(--carbs-color); }
+.col-f { color: var(--fat-color); }
+
+/* Slight emphasis for totals */
+.totals-row .col-cal,
+.totals-row .col-p,
+.totals-row .col-c,
+.totals-row .col-f {
+  font-weight: 600;
+}
+.meal-totals span {
+  margin-right: 12px;
+  font-size: 0.9rem;
+}
+.remaining-row {
+  opacity: 0.85;
+  font-style: italic;
 }
