@@ -240,6 +240,9 @@ export default function ProductsTab({ products, setProducts }) {
         <button className="primary-btn" onClick={loadStarterPack}>
           Load Starter Products
         </button>
+        <button className="danger-btn" style={{marginLeft:8}} onClick={() => setProducts([])}>
+          Clear All Products
+        </button>
       </div>
           <div className="sort-row">
             <label>Sort by:</label>
