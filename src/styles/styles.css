@@ -420,6 +420,7 @@ button.danger:hover {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  color: var(--text);
 }
 
 .label-import textarea {
@@ -720,10 +721,10 @@ body {
   --fat-color: #fca5a5; /* red */
 }
 
-.col-cal { color: #ffffff; }
-.col-p { color: #6ee7b7; }
-.col-c { color: #93c5fd; }
-.col-f { color: #ffd166; }
+.col-cal { color: #dc71c7; }
+.col-p   { color: #6ee7b7; }
+.col-c   { color: #93c5fd; }
+.col-f   { color: #ffd166; }
 
 .meal-totals span {
   margin-right: 12px;
@@ -732,16 +733,16 @@ body {
 }
 
 .remaining-row {
-  opacity: 0.6;
+  opacity: 0.7;
   font-style: italic;
   font-size: 0.85rem;
 }
 
-.meal-totals {
-  opacity: 0.65;
+.meal-total {
+  opacity: 0.7;
   font-size: 0.85rem;
 }
-.meal-totals,
+.meal-total,
 .remaining-row {
   filter: saturate(0.75);
 }

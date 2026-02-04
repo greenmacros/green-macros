@@ -13,6 +13,9 @@ export default function Footer() {
         <strong>Free. Open Source.</strong> No paywalls, no subscriptions,
         no “Pro” modes — just a simple tool that runs on plants.
       </p>
+      <p>
+        Contact: <a href="mailto:greenmacrosinfo@gmail.com">greenmacrosinfo@gmail.com</a>
+      </p>
 
       {/* <DonationButton compact /> */}
     </footer>

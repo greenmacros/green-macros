@@ -381,26 +381,27 @@ function updateItem(mi, ii, field, value) {
                     disabled={isPlaceholder}
                   />
                   
-                  <div className="col-cal">{m.cal.toFixed(0)}</div>
-                  <div className="col-p">{m.protein.toFixed(1)}</div>
-                  <div className="col-c">{m.carbs.toFixed(1)}</div>
-                  <div className="col-f">{m.fat.toFixed(1)}</div>
+                  <div className="cal">{m.cal.toFixed(0)}</div>
+                  <div className="p">{m.protein.toFixed(1)}</div>
+                  <div className="c">{m.carbs.toFixed(1)}</div>
+                  <div className="f">{m.fat.toFixed(1)}</div>
 
                   <button className="danger" onClick={() => removeItem(mi, ii)}>✕</button>
                 </div>
               );
             })}
 
-            <button onClick={() => addItem(mi)}>＋</button>
-
             <div className="meal-row meal-total">
-              <div className="muted">Meal total</div>
-              <div></div>
+              <div className="add-button">
+                <button onClick={() => addItem(mi)}>＋</button>
+                </div>
 
-              <div className="col-cal">Cal  {totals.cal.toFixed(0)} </div>
-              <div className="col-p">P {totals.protein.toFixed(1)}</div>
-              <div className="col-c">C {totals.carbs.toFixed(1)} </div>
-              <div className="col-f"> F {totals.fat.toFixed(1)}</div>
+              <div className="muted">Meal total</div>
+
+              <div className="col-cal">{totals.cal.toFixed(0)} </div>
+              <div className="col-p">{totals.protein.toFixed(1)}</div>
+              <div className="col-c">{totals.carbs.toFixed(1)} </div>
+              <div className="col-f">{totals.fat.toFixed(1)}</div>
 
               <div></div>
             </div>
@@ -410,7 +411,7 @@ function updateItem(mi, ii, field, value) {
 
       <button className="danger" onClick={resetPlan}>Clear all</button>
         <section className="glass-card daily-summary">
-          <h3>Daily Targets & Totals</h3>
+          <h3>Targets & Totals</h3>
 
           <div className="summary-grid">
             <div></div>
@@ -486,31 +487,31 @@ function updateItem(mi, ii, field, value) {
             </div>
             <div className="row-label">Remaining</div>
 
-            <div className={proximityClass(
+            <div className={`remaining-row ${proximityClass(
               mealPlan.profile.calories - remaining.cal,
               mealPlan.profile.calories
-            )}>
+            )}`}>
               {remaining.cal.toFixed(0)}
             </div>
 
-            <div className={proximityClass(
+            <div className={`remaining-row ${proximityClass(
               mealPlan.profile.protein - remaining.protein,
               mealPlan.profile.protein
-            )}>
+            )}`}>
               {remaining.protein.toFixed(1)}
             </div>
 
-            <div className={proximityClass(
+            <div className={`remaining-row ${proximityClass(
               mealPlan.profile.carbs - remaining.carbs,
               mealPlan.profile.carbs
-            )}>
+            )}`}>
               {remaining.carbs.toFixed(1)}
             </div>
 
-            <div className={proximityClass(
+            <div className={`remaining-row ${proximityClass(
               mealPlan.profile.fat - remaining.fat,
               mealPlan.profile.fat
-            )}>
+            )}`}>
               {remaining.fat.toFixed(1)}
             </div>
           </div>

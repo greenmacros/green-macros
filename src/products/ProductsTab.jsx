@@ -323,7 +323,9 @@ export default function ProductsTab({ products, setProducts }) {
       <div className="glass-card">
         <h3>Paste nutrition label</h3>
         <div className="label-import">
-          <textarea rows={4} value={labelText} onChange={e => setLabelText(e.target.value)} />
+          <textarea rows={4} value={labelText} onChange={e => setLabelText(e.target.value)} placeholder={"e.g. Calories: 120\nProtein: 5g\nCarbs: 20g\nFat: 2g"} />
+          <div style={{fontSize: '0.95em', color: '#888', marginTop: '4px'}}>
+          </div>
         </div>
         <button onClick={() => setPreview(parseLabel(labelText))}>Preview</button>
 
@@ -344,7 +346,7 @@ export default function ProductsTab({ products, setProducts }) {
           </div>
         )}
         <p className="note">
-          ⚠️ Preloaded values are approximate. Always verify nutrition labels.
+          ⚠️ Preloaded values on the Starter Products are approximate. Always verify nutrition labels.
           GreenMacros is a planning tool, not medical advice.
         </p>
 
