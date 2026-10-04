@@ -10,7 +10,13 @@ export function isoDay(date = new Date()) {
   return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
 }
 
-export const backupFilename = (kind = "green-macros-backup", date = new Date()) => `${kind}-${isoDay(date)}.json`;
+/** Local time as HHMMSS (for file names). */
+export function isoTime(date = new Date()) {
+  const p = n => String(n).padStart(2, "0");
+  return `${p(date.getHours())}${p(date.getMinutes())}${p(date.getSeconds())}`;
+}
+
+export const backupFilename = (kind = "green-macros-backup", date = new Date()) => `${kind}-${isoDay(date)}-${isoTime(date)}.json`;
 
 export function formatDateTime(time, lang) {
   return new Date(time).toLocaleString(lang === "ja" ? "ja-JP" : undefined, { dateStyle: "medium", timeStyle: "short" });

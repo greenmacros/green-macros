@@ -249,7 +249,7 @@ describe("full backup with dates", () => {
   it("rejects files that aren't backups and names files by local date", async () => {
     const { parseBackup, backupFilename } = await import("../backup");
     expect(() => parseBackup({ foo: 1 })).toThrow();
-    expect(backupFilename("green-macros-backup", new Date(2026, 9, 4))).toBe("green-macros-backup-2026-10-04.json");
+    expect(backupFilename("green-macros-backup", new Date(2026, 9, 4, 13, 5, 9))).toBe("green-macros-backup-2026-10-04-130509.json");
   });
 });
 
