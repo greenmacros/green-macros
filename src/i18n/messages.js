@@ -315,8 +315,9 @@ export const MESSAGES = {
     "レシピはまだありません。プランタブで食事を作り、⋯メニューの「レシピとして保存…」を使ってください。"
   ),
   /* theme, print, image */
-  "theme.toDark": m("Switch to dark mode", "ダークモードに切り替え"),
-  "theme.toLight": m("Switch to light mode", "ライトモードに切り替え"),
+  "theme.light": m("Light mode", "ライトモード"),
+  "theme.dark": m("Dark mode", "ダークモード"),
+  "theme.label": m("Theme", "テーマ"),
   "plans.image": m("Save as image (PNG)", "画像として保存（PNG）"),
   "plans.print": m("Print…", "印刷…"),
   "week.print": m("Print", "印刷"),
@@ -387,7 +388,6 @@ export const MESSAGES = {
   "backup.lastNever": m("No full backup yet", "完全バックアップはまだありません"),
   /* settings & panels */
   "settings.title": m("Settings", "設定"),
-  "settings.language": m("Language", "言語"),
   "products.more": m("More", "その他"),
   "summary.details": m("Details", "詳細"),
   "panel.foods": m("Food list", "食品リスト"),
@@ -461,5 +461,77 @@ export const MESSAGES = {
   "balance.scale": m("Change {name}: {from} → {to}", "{name} の量を変更：{from} → {to}"),
   "balance.remove": m("Remove {name} ({amount}) from {meal}", "{meal} から {name}（{amount}）を外す"),
   "balance.apply": m("Apply", "適用"),
-  "toast.suggestionApplied": m("Suggestion applied", "提案を適用しました")
+  "toast.suggestionApplied": m("Suggestion applied", "提案を適用しました"),
+  /* organize mode */
+  "organize.start": m("Organize", "並べ替え"),
+  "organize.done": m("Done", "完了"),
+  "organize.hint": m("Reorder by dragging", "ドラッグで並べ替え"),
+  "organize.help": m(
+    "Drag the grip (or use the arrows) to reorder meals and items. Drop an item on another meal to move it there. Changes save automatically.",
+    "つまみをドラッグ（または矢印を使用）して、食事や食品を並べ替えます。食品を別の食事にドロップすると移動できます。変更は自動で保存されます。"
+  ),
+  "organize.productsHelp": m(
+    "Drag rows (or use the arrows) to set your own order. The list stays in this order under “Manual order”.",
+    "行をドラッグ（または矢印を使用）して好きな順に並べます。この順序は並べ替えの「手動」で保たれます。"
+  ),
+  "organize.drag": m("Drag to reorder", "ドラッグして並べ替え"),
+  "organize.moveTo": m("Move to…", "移動先…"),
+  "organize.dropHere": m("Drop items here", "ここに食品をドロップ"),
+  "organize.items": m("{n} item(s)", "{n} 件"),
+  "sort.manual": m("Manual order", "手動"),
+  /* categories & product list */
+  "cat.label": m("Category", "カテゴリ"),
+  "cat.all": m("All", "すべて"),
+  "cat.protein": m("Protein", "たんぱく源"),
+  "cat.grains": m("Grains & starch", "穀類・いも"),
+  "cat.veg": m("Vegetables", "野菜・きのこ・海藻"),
+  "cat.fruit": m("Fruit", "果物"),
+  "cat.fats": m("Nuts, seeds & fats", "ナッツ・種・油脂"),
+  "cat.drinks": m("Drinks", "飲み物"),
+  "cat.other": m("Other", "その他"),
+  "form.category": m("Category", "カテゴリ"),
+  "products.status.label": m("Show", "表示"),
+  "products.status.fav": m("Favorites", "お気に入り"),
+  "products.status.used": m("In use", "使用中"),
+  "products.status.unused": m("Unused", "未使用"),
+  "products.clearFilters": m("Clear filters", "絞り込みを解除"),
+  "products.view.label": m("View", "表示形式"),
+  "products.view.list": m("List", "リスト"),
+  "products.view.grouped": m("By category", "カテゴリ別"),
+  "products.showMore": m("Show {n} more ({left} left)", "さらに {n} 件表示（残り {left} 件）"),
+  "sort.used": m("Most used", "よく使う順"),
+  "products.select": m("Select", "選択"),
+  "products.selectDone": m("Done", "完了"),
+  "products.selected": m("{n} selected", "{n} 件選択中"),
+  "products.selectAll": m("Select all {n}", "{n} 件すべて選択"),
+  "products.clearSel": m("Clear", "選択解除"),
+  "products.bulkFav": m("Favorite", "お気に入りにする"),
+  "products.bulkUnfav": m("Unfavorite", "お気に入り解除"),
+  "products.setCategory": m("Set category…", "カテゴリを設定…"),
+  "products.confirmBulk": m(
+    "Delete {n} product(s)? {used} of them are used in plans, which will then show “Missing product”.",
+    "{n} 件の食品を削除しますか？そのうち {used} 件はプランで使用中で、削除後は「食品が見つかりません」と表示されます。"
+  ),
+  "toast.bulkDeleted": m("Deleted {n} products", "{n} 件の食品を削除しました"),
+  "toast.noUnused": m("Every product is used in a plan or recipe", "すべての食品がプランまたはレシピで使われています"),
+  "products.findDuplicates": m("Find duplicates…", "重複を探す…"),
+  "products.selectUnused": m("Select unused products", "未使用の食品を選択"),
+
+  /* duplicates */
+  "dup.title": m("Find duplicates", "重複を探す"),
+  "dup.intro": m(
+    "These products look like the same thing. Choose the one to keep — plans and recipes that use the others switch to it.",
+    "同じものと思われる食品です。残す食品を選ぶと、他の食品を使っているプランやレシピは残した食品に切り替わります。"
+  ),
+  "dup.none": m("No duplicates found.", "重複は見つかりませんでした。"),
+  "dup.byName": m("Same name", "同じ名前"),
+  "dup.byNutrition": m("Different names, identical nutrition", "名前は違うが栄養値が同じ"),
+  "dup.keep": m("Keep", "残す"),
+  "dup.ignore": m("Not duplicates", "重複ではない"),
+  "dup.merge": m("Merge ({n} removed)", "統合する（{n} 件を削除）"),
+  "dup.warn": m(
+    "Amounts stay the same when items switch products, so check your totals afterwards. You can undo right after merging.",
+    "食品が切り替わっても量はそのままなので、統合後に合計をご確認ください。統合直後なら元に戻せます。"
+  ),
+  "toast.merged": m("Merged {n} duplicate(s) into “{name}”", "{n} 件の重複を「{name}」に統合しました")
 };

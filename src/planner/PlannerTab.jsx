@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BalancePanel from "./BalancePanel";
 import MealBuilder from "./MealBuilder";
+import OrganizeView from "./OrganizeView";
 import MealCard from "./MealCard";
 import PlanTabs from "./PlanTabs";
 import SummaryCard from "./SummaryCard";
@@ -12,6 +13,7 @@ import { copyToClipboard, downloadFile, planToText, plansToCSV } from "../lib/ex
 import { MACRO_LABEL_KEYS, buildProductMap, sumMeals } from "../lib/macros";
 import { clonePlan, cloneMeal, createItem, createMeal, createPlan, hasTarget } from "../lib/plans";
 import { createRecipe } from "../lib/recipes";
+import { moveInList, moveItemInMeals, nudgeInList } from "../lib/reorder";
 
 const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 
@@ -31,6 +33,7 @@ export default function PlannerTab({
   const [builderMealId, setBuilderMealId] = useState(null);
   const [summaryInView, setSummaryInView] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [organize, setOrganize] = useState(false);
   const { plans: allPlans, activePlanId } = plannerState;
   const plans = useMemo(() => allPlans.filter(p => !p.archived), [allPlans]);
   const archivedPlans = useMemo(() => allPlans.filter(p => p.archived), [allPlans]);
@@ -238,6 +241,11 @@ export default function PlannerTab({
     });
   }
 
+  /* ---------- organize mode: reorder meals and items ---------- */
+  const moveMealTo = (fromId, toId) => updateMeals(ms => moveInList(ms, fromId, toId));
+  const moveItem = (itemId, toMealId, targetItemId) => updateMeals(ms => moveItemInMeals(ms, itemId, toMealId, targetItemId));
+  const nudgeItem = (mealId, itemId, step) => mapMeal(mealId, m => ({ ...m, items: nudgeInList(m.items, itemId, step) }));
+
   /* ---------- item actions ---------- */
   const addItem = (mealId, product) =>
     mapMeal(mealId, m => ({ ...m, items: [...m.items, createItem(product.id, product.servingGrams)] }));
@@ -302,7 +310,8 @@ export default function PlannerTab({
   async function exportImage(id) {
     const plan = plans.find(p => p.id === id);
     try {
-      const canvas = renderPlanCanvas(plan, productMap, { t, lang });
+      const theme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      const canvas = renderPlanCanvas(plan, productMap, { t, lang, theme });
       downloadFile(await canvasToBlob(canvas), `${plan.name || "plan"}.png`, "image/png");
       notify(t("toast.imageSaved"));
     } catch {
@@ -344,7 +353,7 @@ export default function PlannerTab({
   }
 
   return (
-    <div className="planner">
+    <div className={`planner ${organize ? "organizing" : ""}`}>
       <PlanTabs
         plans={plans}
         archived={archivedPlans}
@@ -369,6 +378,8 @@ export default function PlannerTab({
         onPrint={id => onPrint({ kind: "plan", id })}
         onImage={exportImage}
         onFit={() => onFit(null)}
+        organize={organize}
+        onToggleOrganize={() => setOrganize(o => !o)}
       />
 
       {products.length === 0 && (
@@ -378,6 +389,17 @@ export default function PlannerTab({
         </div>
       )}
 
+      {organize ? (
+        <OrganizeView
+          meals={meals}
+          productMap={productMap}
+          onMoveMeal={moveMealTo}
+          onNudgeMeal={moveMeal}
+          onMoveItem={moveItem}
+          onNudgeItem={nudgeItem}
+        />
+      ) : (
+        <>
       {meals.map((meal, mi) => (
         <MealCard
           key={meal.id}
@@ -406,12 +428,17 @@ export default function PlannerTab({
 
       <button className="add-meal-btn" onClick={() => addMeal(meals.length - 1)}>{t("meal.addMealBtn")}</button>
 
+        </>
+      )}
+
+      {!organize && (
       <TotalsBar
         hidden={summaryInView}
         profile={profile}
         totals={dailyTotals}
         onDetails={() => document.getElementById("summary-card")?.scrollIntoView({ behavior: "smooth", block: "center" })}
       />
+      )}
 
       {builderMeal && (() => {
         const d = builderDefaults(builderMeal);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import CategoryChips from "./CategoryChips";
 import { useI18n } from "../i18n/context";
 import { fold } from "../lib/foods";
 
@@ -20,15 +21,16 @@ export default function ProductPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
+  const [category, setCategory] = useState("");
   const ref = useRef(null);
   const inputRef = useRef(null);
 
   const matches = useMemo(() => {
     const q = fold(query);
     return products
-      .filter(p => !q || fold(p.name).includes(q))
+      .filter(p => (!q || fold(p.name).includes(q)) && (!category || p.category === category))
       .sort((a, b) => Number(b.fav) - Number(a.fav) || a.name.localeCompare(b.name));
-  }, [products, query]);
+  }, [products, query, category]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,6 +101,16 @@ export default function ProductPicker({
               setCursor(0);
             }}
           />
+          {products.length >= 12 && (
+            <CategoryChips
+              products={products}
+              value={category}
+              onChange={c => {
+                setCategory(c);
+                setCursor(0);
+              }}
+            />
+          )}
           <div className="picker-list" role="listbox">
             {matches.map((p, i) => (
               <button

@@ -31,7 +31,9 @@ export default function PlanTabs({
   onShare,
   onPrint,
   onImage,
-  onFit
+  onFit,
+  organize,
+  onToggleOrganize
 }) {
   const { t } = useI18n();
   const [editingId, setEditingId] = useState(null);
@@ -140,6 +142,15 @@ export default function PlanTabs({
       </div>
 
       <button className="icon-btn add-plan" onClick={onAdd} title={t("plans.new")} aria-label={t("plans.new")}><Icon name="plus" size={18} /></button>
+
+      <button
+        className={`btn-ghost organize-btn ${organize ? "on" : ""}`}
+        aria-pressed={organize}
+        title={t("organize.hint")}
+        onClick={onToggleOrganize}
+      >
+        {organize ? t("organize.done") : t("organize.start")}
+      </button>
 
       {active && (
         <Menu title={t("plans.actions")}>

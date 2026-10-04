@@ -6,7 +6,7 @@ import RecipesCard from "./RecipesCard";
 import { useI18n } from "../i18n/context";
 
 /** One tabbed panel for every way of adding products, instead of four stacked sections. */
-export default function AddPanel({ products, names, recipes, setRecipes, onAdd, onAddMany, notify }) {
+export default function AddPanel({ products, names, recipes, setRecipes, onAdd, onAddMany, notify, hidden }) {
   const { t } = useI18n();
   const [tab, setTab] = useState("foods");
   const tabs = [
@@ -17,7 +17,7 @@ export default function AddPanel({ products, names, recipes, setRecipes, onAdd, 
   ];
 
   return (
-    <section className="glass-card add-panel">
+    <section className="glass-card add-panel" hidden={hidden}>
       <div className="panel-tabs" role="tablist">
         {tabs.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>

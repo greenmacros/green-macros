@@ -311,3 +311,108 @@ describe("suggestBalance (optional)", () => {
     expect(r.actions.filter(a => a.itemId)).toHaveLength(0);
   });
 });
+
+describe("reorder helpers (organize mode)", () => {
+  const ids = list => list.map(x => x.id).join("");
+  const L = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+
+  it("moves entries and ignores no-ops", async () => {
+    const { moveInList, nudgeInList } = await import("../reorder");
+    expect(ids(moveInList(L, "a", "c"))).toBe("bcad");
+    expect(ids(moveInList(L, "d", "a"))).toBe("dabc");
+    expect(moveInList(L, "a", "a")).toBe(L);
+    expect(moveInList(L, "x", "a")).toBe(L);
+    expect(ids(nudgeInList(L, "b", 1))).toBe("acbd");
+    expect(nudgeInList(L, "a", -1)).toBe(L);
+    expect(nudgeInList(L, "d", 1)).toBe(L);
+  });
+
+  const meals = () => [
+    { id: "m1", items: [{ id: "i1" }, { id: "i2" }, { id: "i3" }] },
+    { id: "m2", items: [{ id: "j1" }] },
+    { id: "m3", items: [] }
+  ];
+  const layout = ms => ms.map(m => m.items.map(i => i.id).join(",")).join("|");
+
+  it("reorders items within a meal (down lands after the target, up before)", async () => {
+    const { moveItemInMeals } = await import("../reorder");
+    expect(layout(moveItemInMeals(meals(), "i1", "m1", "i3"))).toBe("i2,i3,i1|j1|");
+    expect(layout(moveItemInMeals(meals(), "i3", "m1", "i1"))).toBe("i3,i1,i2|j1|");
+    expect(layout(moveItemInMeals(meals(), "i1", "m1", null))).toBe("i2,i3,i1|j1|");
+  });
+  it("moves items across meals: before a target, to the end, and into an empty meal", async () => {
+    const { moveItemInMeals } = await import("../reorder");
+    expect(layout(moveItemInMeals(meals(), "i2", "m2", "j1"))).toBe("i1,i3|i2,j1|");
+    expect(layout(moveItemInMeals(meals(), "i2", "m2", null))).toBe("i1,i3|j1,i2|");
+    expect(layout(moveItemInMeals(meals(), "j1", "m3", null))).toBe("i1,i2,i3||j1");
+  });
+  it("never loses or duplicates an item, and ignores bad targets", async () => {
+    const { moveItemInMeals } = await import("../reorder");
+    const out = moveItemInMeals(meals(), "i2", "m3", "nope");
+    expect(out.flatMap(m => m.items).map(i => i.id).sort().join("")).toBe("i1i2i3j1");
+    const same = meals();
+    expect(moveItemInMeals(same, "zzz", "m1")).toBe(same);
+    expect(moveItemInMeals(same, "i1", "ghost")).toBe(same);
+  });
+});
+
+describe("product categories", () => {
+  const g = (name, extra = {}) => ({ name, unit: "g", servingGrams: 100, cal: 100, protein: 5, carbs: 15, fat: 2, ...extra });
+
+  it("guesses sensible categories from names (English and Japanese)", async () => {
+    const { guessCategory } = await import("../categories");
+    expect(guessCategory(g("Tofu (firm)"))).toBe("protein");
+    expect(guessCategory(g("納豆"))).toBe("protein");
+    expect(guessCategory(g("Peanut Butter"))).toBe("fats");
+    expect(guessCategory(g("Soy Milk (unsweetened)", { unit: "ml" }))).toBe("drinks");
+    expect(guessCategory(g("豆乳(無調整)", { unit: "ml" }))).toBe("drinks");
+    expect(guessCategory(g("White Rice (cooked)"))).toBe("grains");
+    expect(guessCategory(g("さつまいも(蒸し)"))).toBe("grains");
+    expect(guessCategory(g("Broccoli"))).toBe("veg");
+    expect(guessCategory(g("Banana", { unit: "unit" }))).toBe("fruit");
+    expect(guessCategory(g("Protein Shake (powder)", { unit: "scoop" }))).toBe("protein");
+    expect(guessCategory(g("Olive oil", { unit: "ml" }))).toBe("fats");
+  });
+  it("falls back to the macro profile", async () => {
+    const { guessCategory } = await import("../categories");
+    expect(guessCategory(g("Mystery bar", { protein: 1, carbs: 2, fat: 40 }))).toBe("fats");
+    expect(guessCategory(g("Mystery powder", { protein: 60, carbs: 5, fat: 3 }))).toBe("protein");
+    expect(guessCategory(g("Mystery flour", { protein: 2, carbs: 80, fat: 1 }))).toBe("grains");
+    expect(guessCategory(g("Mystery", { protein: 0, carbs: 0, fat: 0 }))).toBe("other");
+  });
+  it("adds a category to old products and keeps a chosen one", () => {
+    const [a, b] = normalizeProducts([{ id: 1, name: "Tofu" }, { id: 2, name: "Tofu", category: "veg" }]);
+    expect(a.category).toBe("protein");
+    expect(b.category).toBe("veg");
+    expect(normalizeProducts([{ id: 3, name: "x", category: "bogus" }])[0].category).toBe("other");
+  });
+  it("sorts by how often a product is used", async () => {
+    const { sortProducts } = await import("../products");
+    const ps = [{ id: "a", name: "A" }, { id: "b", name: "B" }, { id: "c", name: "C" }];
+    const usage = new Map([["c", 5], ["b", 2]]);
+    expect(sortProducts(ps, "used", usage).map(p => p.id).join("")).toBe("cba");
+  });
+});
+
+describe("findDuplicateGroups", () => {
+  const mk = (id, name, over = {}) => ({ id, name, unit: "g", servingGrams: 100, cal: 76, protein: 8, carbs: 2, fat: 5, ...over });
+  it("groups by normalized name, then by identical nutrition, never twice", async () => {
+    const { findDuplicateGroups } = await import("../duplicates");
+    const groups = findDuplicateGroups([
+      mk("1", "Tofu (firm)"),
+      mk("2", "tofu  firm"),
+      mk("3", "Kinugoshi", { cal: 56, protein: 5.3 }),
+      mk("4", "Silken tofu X", { cal: 56, protein: 5.3 }),
+      mk("5", "Unique", { cal: 999 })
+    ]);
+    expect(groups).toHaveLength(2);
+    expect(groups[0].reason).toBe("name");
+    expect(groups[0].items.map(p => p.id)).toEqual(["1", "2"]);
+    expect(groups[1].reason).toBe("nutrition");
+    expect(groups[1].items.map(p => p.id)).toEqual(["3", "4"]);
+  });
+  it("finds nothing when everything is distinct", async () => {
+    const { findDuplicateGroups } = await import("../duplicates");
+    expect(findDuplicateGroups([mk("1", "A"), mk("2", "B", { cal: 1 })])).toEqual([]);
+  });
+});

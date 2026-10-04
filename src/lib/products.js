@@ -1,3 +1,4 @@
+import { CATEGORIES, guessCategory } from "./categories";
 import { uid } from "./id";
 
 export const UNITS = ["g", "ml", "unit", "scoop"];
@@ -10,7 +11,7 @@ const num = (v, fallback = 0) => {
 const round1 = n => Math.round(n * 10) / 10;
 
 export function createProduct(fields = {}) {
-  return {
+  const product = {
     id: uid(),
     name: "",
     unit: "g",
@@ -22,12 +23,14 @@ export function createProduct(fields = {}) {
     fav: false,
     ...fields
   };
+  if (!CATEGORIES.includes(product.category)) product.category = guessCategory(product);
+  return product;
 }
 
 /** Coerce anything (old saves, imports, share links) into a valid product, or null. */
 export function normalizeProduct(p) {
   if (!p || typeof p !== "object") return null;
-  return {
+  const product = {
     id: p.id == null ? uid() : String(p.id),
     name: String(p.name ?? "").trim() || "Unnamed product",
     unit: UNITS.includes(p.unit) ? p.unit : "g",
@@ -38,6 +41,8 @@ export function normalizeProduct(p) {
     fat: round1(num(p.fat)),
     fav: Boolean(p.fav)
   };
+  product.category = CATEGORIES.includes(p.category) ? p.category : guessCategory(product);
+  return product;
 }
 
 export function normalizeProducts(list) {
@@ -65,7 +70,7 @@ export function sameProduct(a, b) {
   );
 }
 
-export function sortProducts(products, sortBy) {
+export function sortProducts(products, sortBy, usage = new Map()) {
   const list = [...products];
   const by = key => (a, b) => b[key] - a[key] || a.name.localeCompare(b.name);
   switch (sortBy) {
@@ -73,7 +78,9 @@ export function sortProducts(products, sortBy) {
     case "carbs": return list.sort(by("carbs"));
     case "fat": return list.sort(by("fat"));
     case "cal": return list.sort(by("cal"));
+    case "used": return list.sort((a, b) => (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0) || a.name.localeCompare(b.name));
     case "recent": return list.reverse();
+    case "manual": return list; // the saved order, as arranged by dragging
     case "name":
     default: return list.sort((a, b) => a.name.localeCompare(b.name));
   }

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import NumInput from "./NumInput";
 import { useI18n } from "../i18n/context";
+import { CATEGORIES, guessCategory } from "../lib/categories";
 import { kcalFromMacros } from "../lib/macros";
 import { UNITS, createProduct } from "../lib/products";
 
@@ -9,6 +10,7 @@ export default function ProductForm({ initial, submitLabel, existingNames = [], 
   const { t } = useI18n();
   const [draft, setDraft] = useState(() => createProduct(initial));
   const [autoKcal, setAutoKcal] = useState(!initial?.cal);
+  const [catTouched, setCatTouched] = useState(Boolean(initial?.category));
   const nameRef = useRef(null);
 
   const set = (key, value) => setDraft(d => ({ ...d, [key]: value }));
@@ -16,13 +18,16 @@ export default function ProductForm({ initial, submitLabel, existingNames = [], 
   const name = draft.name.trim();
   const duplicate = existingNames.some(n => n.toLowerCase() === name.toLowerCase());
   const valid = name && draft.servingGrams > 0;
+  // until the user picks one, the category follows the name / macros
+  const category = catTouched ? draft.category : guessCategory({ ...draft, name });
 
   function submit(e) {
     e.preventDefault();
     if (!valid) return;
-    onSubmit({ ...draft, name, cal: kcal });
+    onSubmit({ ...draft, name, cal: kcal, category });
     setDraft(createProduct());
     setAutoKcal(true);
+    setCatTouched(false);
     nameRef.current?.focus();
   }
 
@@ -46,6 +51,12 @@ export default function ProductForm({ initial, submitLabel, existingNames = [], 
         {t("form.unit")}
         <select value={draft.unit} onChange={e => set("unit", e.target.value)}>
           {UNITS.map(u => <option key={u} value={u}>{t(`unit.${u}`)}</option>)}
+        </select>
+      </label>
+      <label className="field">
+        {t("form.category")}
+        <select value={category} onChange={e => { setCatTouched(true); set("category", e.target.value); }}>
+          {CATEGORIES.map(c => <option key={c} value={c}>{t(`cat.${c}`)}</option>)}
         </select>
       </label>
       <label className="field">

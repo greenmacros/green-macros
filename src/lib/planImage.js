@@ -1,14 +1,22 @@
 import { calcMacros, formatAmount, proximityClass, sumItems, sumMeals } from "./macros";
 import { hasTarget } from "./plans";
 
-// Always drawn on a clean light "card" so exported images look the same
-// regardless of the app theme and read well when shared or printed.
+// The image follows the app theme (light or dark), using the same colours as the UI.
 const FONT = '"Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,system-ui,-apple-system,"Segoe UI",sans-serif';
-const C = {
-  bg: "#eef5f0", card: "#ffffff", ink: "#16241b", muted: "#5b6b61", line: "#e2ebe5",
-  accent: "#1d5a24", cal: "#b03a97", protein: "#0c8a5c", carbs: "#2563c9", fat: "#a86400",
-  hit: "#15803d", close: "#a16207", off: "#c62828"
+const PALETTES = {
+  light: {
+    bg: "#f5f8f6", card: "#ffffff", border: "#dbe5de", ink: "#16241b", muted: "#5b6b61", line: "#e6eee9",
+    accent: "#138a52", cal: "#b03a97", protein: "#0c8a5c", carbs: "#2563c9", fat: "#a86400",
+    hit: "#15803d", close: "#a16207", off: "#c62828"
+  },
+  dark: {
+    bg: "#0e1310", card: "#141b16", border: "#243029", ink: "#e5e7eb", muted: "#9ca3af", line: "#1f2923",
+    accent: "#3ddc97", cal: "#dc71c7", protein: "#6ee7b7", carbs: "#93c5fd", fat: "#ffd166",
+    hit: "#22c55e", close: "#eab308", off: "#f87171"
+  }
 };
+// Set at the start of each render (rendering is synchronous, so this is safe).
+let C = PALETTES.light;
 const MACROS = ["cal", "protein", "carbs", "fat"];
 const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 const W = 900;
@@ -54,7 +62,8 @@ function heights(plan) {
  * Draw a plan to a canvas. `t` and `lang` come from the i18n context.
  * Returns the canvas (call .toBlob to save).
  */
-export function renderPlanCanvas(plan, productMap, { t, lang }, scale = 2) {
+export function renderPlanCanvas(plan, productMap, { t, lang, theme = "light" }, scale = 2) {
+  C = PALETTES[theme] ?? PALETTES.light;
   const { meals: mealHeights, summary, total } = heights(plan);
   const canvas = document.createElement("canvas");
   canvas.width = W * scale;
@@ -78,6 +87,8 @@ export function renderPlanCanvas(plan, productMap, { t, lang }, scale = 2) {
     ctx.fillStyle = C.card;
     roundRect(ctx, PAD, y, W - PAD * 2, h - 10, 14);
     ctx.fill();
+    ctx.strokeStyle = C.border;
+    ctx.stroke();
 
     const totals = sumItems(meal.items, productMap);
     text(ctx, meal.name, PAD + 18, y + 26, { size: 18, weight: 700, maxWidth: 420 });
@@ -113,6 +124,8 @@ export function renderPlanCanvas(plan, productMap, { t, lang }, scale = 2) {
   ctx.fillStyle = C.card;
   roundRect(ctx, PAD, y, W - PAD * 2, summary - 10, 14);
   ctx.fill();
+  ctx.strokeStyle = C.border;
+  ctx.stroke();
   text(ctx, t("summary.title"), PAD + 18, y + 26, { size: 18, weight: 700 });
   MACROS.forEach(k => text(ctx, t(`macro.${k === "cal" ? "calories" : k}`), COL_RIGHT[k], y + 26, { size: 13, weight: 600, color: C[k], align: "right" }));
   let sy = y + 62;

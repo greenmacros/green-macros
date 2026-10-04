@@ -10,6 +10,7 @@ export default function Menu({
   className = "icon-btn",
   align = "right",
   closeOnClick = true,
+  anchorClassName = "",
   children
 }) {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function Menu({
   const close = () => setOpen(false);
 
   return (
-    <div className="menu-anchor" ref={ref}>
+    <div className={`menu-anchor ${anchorClassName}`} ref={ref}>
       <button
         type="button"
         className={className}

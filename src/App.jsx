@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FirstRunModal from "./components/FirstRunModal";
+import LangSwitch from "./components/LangSwitch";
+import ThemeSwitch from "./components/ThemeSwitch";
 import Footer from "./components/Footer";
 import Menu from "./components/Menu";
 import ShareImportModal from "./components/ShareImportModal";
@@ -44,7 +46,7 @@ function stripShareFromUrl() {
 }
 
 export default function App() {
-  const { t, lang, setLang } = useI18n();
+  const { t, lang } = useI18n();
   const labels = { plan: t("plan.default"), meal: t("meal.default") };
 
   const [tab, setTab] = useState(() => {
@@ -221,6 +223,30 @@ export default function App() {
     });
   }
 
+  /* ---------- merge duplicate products ---------- */
+  function mergeProducts(keepId, removeIds) {
+    const prev = { products, plannerState, recipes };
+    const gone = new Set(removeIds);
+    const repoint = it => (gone.has(it.productId) ? { ...it, productId: keepId } : it);
+    setProducts(ps => ps.filter(p => !gone.has(p.id)));
+    setPlannerState(s => ({
+      ...s,
+      plans: s.plans.map(plan => ({
+        ...plan,
+        data: { ...plan.data, meals: plan.data.meals.map(m => ({ ...m, items: m.items.map(repoint) })) }
+      }))
+    }));
+    setRecipes(rs => rs.map(r => ({ ...r, items: r.items.map(repoint) })));
+    notify(t("toast.merged", { n: removeIds.length, name: products.find(p => p.id === keepId)?.name ?? "" }), {
+      label: t("common.undo"),
+      run: () => {
+        setProducts(prev.products);
+        setPlannerState(prev.plannerState);
+        setRecipes(prev.recipes);
+      }
+    });
+  }
+
   /* ---------- first run ---------- */
   function finishFirstRun(preset) {
     if (preset) {
@@ -359,7 +385,9 @@ export default function App() {
         </div>
 
         <div className="topbar-right">
-          <Menu label={t("share.button")} title={t("share.button")} className="share-btn">
+          <LangSwitch />
+          <ThemeSwitch theme={theme} onChange={toggleTheme} />
+          <Menu label={t("share.button")} title={t("share.button")} className="share-btn" anchorClassName="share-anchor">
             <button disabled={!activePlan} onClick={() => copyShareLink([activePlan])}>
               {t("share.copyCurrent")}
             </button>
@@ -367,14 +395,7 @@ export default function App() {
               {t("share.copyAll", { n: sharablePlans.length })}
             </button>
           </Menu>
-          <Menu title={t("settings.title")}>
-            <div className="menu-note">{t("settings.language")}</div>
-            <button onClick={() => setLang("en")}>{lang === "en" ? "✓ " : ""}English</button>
-            <button onClick={() => setLang("ja")}>{lang === "ja" ? "✓ " : ""}日本語</button>
-            <button onClick={toggleTheme}>
-              {theme === "light" ? t("theme.toDark") : t("theme.toLight")}
-            </button>
-            <hr />
+          <Menu title={t("settings.title")} anchorClassName="settings-anchor">
             <button onClick={() => downloadJSON(products, backupFilename("products"))}>{t("backup.exportProducts")}</button>
             <button onClick={() => downloadJSON(plannerState, backupFilename("plans"))}>{t("backup.exportPlans")}</button>
             <button onClick={fullBackup}>{t("backup.exportAll")}</button>
@@ -463,6 +484,7 @@ export default function App() {
           prefill={productDraft}
           onPrefillUsed={clearDraft}
           onFit={product => setFitDialog({ product })}
+          onMerge={mergeProducts}
           notify={notify}
         />
       )}

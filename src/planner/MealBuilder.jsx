@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import AdviceNotice from "../components/AdviceNotice";
+import CategoryChips from "../components/CategoryChips";
 import NumInput from "../components/NumInput";
 import { useI18n } from "../i18n/context";
 import { fold } from "../lib/foods";
@@ -21,6 +22,7 @@ export default function MealBuilder({ products, mealName, defaultTarget, targetS
   const { t } = useI18n();
   const [selected, setSelected] = useState(() => new Set(products.filter(p => p.fav).map(p => p.id)));
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
   const [target, setTarget] = useState(defaultTarget);
   const [maxServings, setMaxServings] = useState(4);
   const [result, setResult] = useState(null);
@@ -30,9 +32,9 @@ export default function MealBuilder({ products, mealName, defaultTarget, targetS
   const shown = useMemo(() => {
     const q = fold(query);
     return products
-      .filter(p => !q || fold(p.name).includes(q))
+      .filter(p => (!q || fold(p.name).includes(q)) && (!category || p.category === category))
       .sort((a, b) => Number(b.fav) - Number(a.fav) || a.name.localeCompare(b.name));
-  }, [products, query]);
+  }, [products, query, category]);
 
   const toggle = id =>
     setSelected(s => {
@@ -81,6 +83,7 @@ export default function MealBuilder({ products, mealName, defaultTarget, targetS
               </button>
               <button className="btn-ghost" onClick={() => setSelected(new Set())}>{t("builder.none")}</button>
             </div>
+            {products.length >= 8 && <CategoryChips products={products} value={category} onChange={setCategory} />}
             <div className="builder-list">
               {shown.map(p => (
                 <label key={p.id} className={`builder-item ${selected.has(p.id) ? "on" : ""}`}>

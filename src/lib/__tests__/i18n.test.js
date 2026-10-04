@@ -21,9 +21,12 @@ const dynamic = [
   ...[0, 1, 2, 3, 4, 5, 6].map(i => `day.${i}`),
   ...["planner", "week", "products"].map(i => `tab.${i}`),
   ...["products", "plans", "all"].map(i => `kind.${i}`),
-  ...["name", "recent", "protein", "carbs", "fat", "cal"].map(i => `sort.${i}`),
+  ...["name", "used", "recent", "manual", "protein", "carbs", "fat", "cal"].map(i => `sort.${i}`),
   ...["meal", "remaining", "none"].map(i => `builder.source.${i}`),
   ...["great", "good", "rough", "poor"].map(i => `fit.${i}`),
+  ...["protein", "grains", "veg", "fruit", "fats", "drinks", "other"].map(i => `cat.${i}`),
+  ...["fav", "used", "unused"].map(i => `products.status.${i}`),
+  ...["list", "grouped"].map(i => `products.view.${i}`),
   ...["noTarget", "noContribution", "lockedExceed"].map(i => `auto.${i}`),
   ...["cal", "p", "c", "f", "calories", "protein", "carbs", "fat"].map(i => `macro.${i}`)
 ];
