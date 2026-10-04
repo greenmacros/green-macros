@@ -1,40 +1,23 @@
 import "./firstrun.css";
+import { useI18n } from "../i18n/context";
+import LangSwitch from "./LangSwitch";
 
-export default function FirstRunModal({ onFresh, onPreset, onImport }) {
+export default function FirstRunModal({ onFresh, onPreset }) {
+  const { t } = useI18n();
   return (
     <div className="gm-modal-backdrop">
-      <div className="gm-modal">
-        <h2>Welcome to GreenMacros 🌱</h2>
-
-        <p>
-          GreenMacros is a flexible planning tool — not a diet prescription.
-        </p>
-
-        <p>
-          {onImport 
-            ? "A shared plan was detected. Would you like to import it, start fresh, or load a preset?" 
-            : "Would you like to start completely fresh, or load a simple structure you can customize?"}
-        </p>
+      <div className="gm-modal" role="dialog" aria-modal="true">
+        <div className="modal-lang"><LangSwitch /></div>
+        <h2>{t("first.title")}</h2>
+        <p>{t("first.tool")}</p>
+        <p>{t("first.choose")}</p>
 
         <div className="gm-modal-actions">
-          {onImport && (
-            <button className="btn-primary" onClick={onImport} style={{backgroundColor: '#2ecc71'}}>
-              Import Shared Plan
-            </button>
-          )}
-          
-          <button className="btn-secondary" onClick={onFresh}>
-            Start fresh
-          </button>
-
-          <button className="btn-primary" onClick={onPreset}>
-            Load preset
-          </button>
+          <button className="btn-secondary" onClick={onFresh}>{t("first.fresh")}</button>
+          <button className="btn-primary" onClick={onPreset}>{t("first.preset")}</button>
         </div>
 
-        <p className="gm-modal-note">
-          Presets are neutral structures only — no calories or macro targets are enforced.
-        </p>
+        <p className="gm-modal-note">{t("first.note")}</p>
       </div>
     </div>
   );

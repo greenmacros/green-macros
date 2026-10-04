@@ -1,23 +1,10 @@
-// src/components/Footer.jsx
-import DonationButton from "./DonationButton";
+import { useI18n } from "../i18n/context";
 
 export default function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="app-footer">
-      <p>
-        Built with plant-based nutrition in mind 🌱  
-        Today is a great day to start!
-      </p>
-
-      <p>
-        <strong>Free. Open Source.</strong> No paywalls, no subscriptions,
-        no “Pro” modes — just a simple tool that runs on plants.
-      </p>
-      <p>
-        Contact: <a href="mailto:greenmacrosinfo@gmail.com">greenmacrosinfo@gmail.com</a>
-      </p>
-
-      {/* <DonationButton compact /> */}
+      {t("footer.line")} · <a href="mailto:greenmacrosinfo@gmail.com">greenmacrosinfo@gmail.com</a>
     </footer>
   );
 }

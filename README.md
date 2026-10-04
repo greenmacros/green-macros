@@ -2,36 +2,32 @@
 
 Free, open-source macro planner focused on plant-based nutrition.
 
-- No accounts
-- No paywalls
-- No tracking
-- Works offline
+- No accounts, no paywalls, no tracking
+- Works offline — everything is stored in your browser
 - Share plans with a link
 
 ## Features
-- Product database
-- Nutrition label parsing
-- Open Food Facts import
-- Smart macro planning
-- Shareable links
+- **Plans built for many plans** — searchable "All plans" switcher with totals, scrollable tabs, drag-to-reorder, colors, duplicate/rename/delete (with undo)
+- **Fast product adding** — inline form with auto-calculated calories, searchable picker in the planner (create a product without leaving your plan), favorites, search & sort, Open Food Facts import, nutrition-label parsing (EN/JP, per-serving or per-100g)
+- **Auto-fill** — scale all unlocked items to hit a protein / calorie / carb / fat target
+- **Smart meal builder** — pick products + a target and it suggests amounts (always shown with a medical-advice warning)
+- **Light / dark mode, print, and PNG export** of any plan (and printing the week)
+- **Per-meal targets** — optional calorie/macro target on any meal (pre/post-workout, etc.)
+- **Week view** — assign plans to days, see weekly totals and daily averages
+- **Recipes** — save a meal as a recipe and drop it into any meal later
+- **English / 日本語** — full UI in both languages (auto-detected, switch any time)
+- **Food list** — bundled offline list of ~100 common foods (Japan + global, searchable in kanji / kana / English), Open Food Facts (global or Japan), and CSV import for bigger databases such as the MEXT Japan Standard Tables of Food Composition
+- **Installable & offline** — a service worker caches the app so it works without a connection (try `npm run build && npm run preview`)
+- **Share & backup** — share a single plan or everything via link (merge or replace on import), JSON backups, CSV export, copy as text
+
+## Development
+```bash
+npm install
+npm run dev     # local dev server
+npm test        # unit tests (lib/)
+npm run lint
+npm run build
+npm run preview # production build incl. service worker
+```
 
 Built with React + Vite.
-
-
-
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

@@ -1,521 +1,428 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import MealBuilder from "./MealBuilder";
+import MealCard from "./MealCard";
+import PlanTabs from "./PlanTabs";
+import SummaryCard from "./SummaryCard";
+import TotalsBar from "./TotalsBar";
+import { useI18n } from "../i18n/context";
+import { canvasToBlob, renderPlanCanvas } from "../lib/planImage";
+import { scaleToTarget } from "../lib/autoBalance";
+import { copyToClipboard, downloadFile, planToText, plansToCSV } from "../lib/exporters";
+import { MACRO_LABEL_KEYS, buildProductMap, sumMeals } from "../lib/macros";
+import { clonePlan, cloneMeal, createItem, createMeal, createPlan, hasTarget } from "../lib/plans";
+import { createRecipe } from "../lib/recipes";
 
-/* ---------- helpers ---------- */
-function calcMacros(product, amount) {
-  if (!product) return { cal: 0, protein: 0, carbs: 0, fat: 0 };
-  const ratio = amount / product.servingGrams;
-  return {
-    cal: product.cal * ratio,
-    protein: product.protein * ratio,
-    carbs: product.carbs * ratio,
-    fat: product.fat * ratio
-  };
-}
+const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 
-function proximityClass(actual, target) {
-  if (!target || target === 0) return "";
-  const ratio = actual / target;
+export default function PlannerTab({
+  products,
+  recipes,
+  setRecipes,
+  plannerState,
+  setPlannerState,
+  notify,
+  onCreateProduct,
+  onSharePlan,
+  onPrint
+}) {
+  const { t, lang } = useI18n();
+  const [builderMealId, setBuilderMealId] = useState(null);
+  const [summaryInView, setSummaryInView] = useState(false);
+  const { plans: allPlans, activePlanId } = plannerState;
+  const plans = useMemo(() => allPlans.filter(p => !p.archived), [allPlans]);
+  const archivedPlans = useMemo(() => allPlans.filter(p => p.archived), [allPlans]);
+  const activePlan = plans.find(p => p.id === activePlanId) ?? plans[0];
+  const { profile, meals } = activePlan.data;
 
-  if (ratio >= 0.95 && ratio <= 1.05) return "hit";     // green
-  if (ratio >= 0.85 && ratio <= 1.15) return "close";   // yellow
-  return "off";                                         // red
-}
-
-
-function sumFromRows(items, products) {
-  return items.reduce(
-    (t, it) => {
-      const isPlaceholder = it.productId === "__EMPTY__";
-      const product = isPlaceholder
-        ? null
-        : products.find(p => p.id === it.productId);
-
-      if (!product) return t;
-
-      const m = calcMacros(product, it.amount);
-      t.cal += m.cal;
-      t.protein += m.protein;
-      t.carbs += m.carbs;
-      t.fat += m.fat;
-      return t;
-    },
-    { cal: 0, protein: 0, carbs: 0, fat: 0 }
+  const productMap = useMemo(() => buildProductMap(products), [products]);
+  const totalsByPlan = useMemo(
+    () => new Map(allPlans.map(p => [p.id, sumMeals(p.data.meals, productMap)])),
+    [allPlans, productMap]
   );
-}
+  const dailyTotals = totalsByPlan.get(activePlan.id);
 
-const emptyPlan = {
-  profile: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-  meals: [{ name: "Meal 1", items: [] }]
-};
-
-const PLACEHOLDER_ID = "__EMPTY__";
-
-/* ---------- component ---------- */
-export default function PlannerTab({ products, plannerState, setPlannerState}) {
-  const { plans, activePlanId } = plannerState;
-  const activePlan =
-    plans.find(p => p.id === activePlanId) || plans[0];
-
-  if (!activePlan) {
-    return <div>No plan available</div>;
-  }
-
-  const mealPlan = activePlan?.data ?? structuredClone(emptyPlan);
-  if (!activePlan || !mealPlan) {
-    return null; // or a loading skeleton
-  }
-
-  const [openPlanMenu, setOpenPlanMenu] = useState(null);
-  const [openMealMenu, setOpenMealMenu] = useState(null);
-  const [editingPlanId, setEditingPlanId] = useState(null);
-  const menuRef = useRef(null);
-  const [toast, setToast] = useState(null);
-
-
+  // The sticky bar duplicates the summary card, so hide it while the card itself is on screen.
   useEffect(() => {
-    if (!plannerState.plans.length) return;
-
-    const exists = plannerState.plans.some(
-      p => p.id === plannerState.activePlanId
-    );
-
-    if (!exists) {
-      setPlannerState(s => ({
-        ...s,
-        activePlanId: s.plans[0].id
-      }));
-    }
-  }, [plannerState.plans]);
-
-
-  useEffect(() => {
-    function close(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpenMealMenu(null);
-        setOpenPlanMenu(null);
-      }
-    }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    const el = document.getElementById("summary-card");
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([entry]) => setSummaryInView(entry.isIntersecting), { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
-  function updatePlan(data) {
+  /* ---------- state helpers ---------- */
+  function patchPlan(id, patch) {
     setPlannerState(s => ({
       ...s,
-      plans: s.plans.map(p =>
-        p.id === activePlanId ? { ...p, data } : p
-      )
+      plans: s.plans.map(p => (p.id === id ? { ...p, ...patch } : p))
     }));
   }
 
-    useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2000);
-    return () => clearTimeout(t);
-  }, [toast]);
+  /** Update the active plan's data. Pass a function (data) => data. */
+  function updateData(fn) {
+    const id = activePlan.id;
+    setPlannerState(s => ({
+      ...s,
+      plans: s.plans.map(p => (p.id === id ? { ...p, data: fn(p.data) } : p))
+    }));
+  }
 
+  /** Restore a previous version of the active plan's data (used by undo toasts). */
+  function restoreData(planId, data) {
+    setPlannerState(s => ({
+      ...s,
+      plans: s.plans.map(p => (p.id === planId ? { ...p, data } : p))
+    }));
+  }
+
+  const updateMeals = fn => updateData(d => ({ ...d, meals: fn(d.meals) }));
+  const mapMeal = (mealId, fn) => updateMeals(ms => ms.map(m => (m.id === mealId ? fn(m) : m)));
 
   /* ---------- plan actions ---------- */
   function addPlan() {
-    const id = Date.now();
-    setPlannerState(s => ({
-      ...s,
-      plans: [...s.plans, { id, name: `Plan ${s.plans.length + 1}`, data: structuredClone(emptyPlan) }],
-      activePlanId: id
-    }));
+    const plan = createPlan(`${t("plan.default")} ${plans.length + 1}`, {
+      profile,
+      meals: [createMeal(`${t("meal.default")} 1`)]
+    });
+    setPlannerState(s => ({ ...s, plans: [...s.plans, plan], activePlanId: plan.id }));
+  }
+
+  function duplicatePlan(id) {
+    const src = plans.find(p => p.id === id);
+    const copy = clonePlan(src, t("plan.copyOf", { name: src.name }));
+    setPlannerState(s => {
+      const at = s.plans.findIndex(p => p.id === id);
+      const next = [...s.plans];
+      next.splice(at + 1, 0, copy);
+      return { ...s, plans: next, activePlanId: copy.id };
+    });
   }
 
   function removePlan(id) {
     if (plans.length <= 1) return;
-    const rest = plans.filter(p => p.id !== id);
-    setPlannerState(s => ({
-      ...s,
-      plans: rest,
-      activePlanId: rest[0].id
-    }));
+    const visibleIndex = plans.findIndex(p => p.id === id);
+    const fullIndex = allPlans.findIndex(p => p.id === id);
+    const removed = allPlans[fullIndex];
+    setPlannerState(s => {
+      const rest = s.plans.filter(p => p.id !== id);
+      const stillActive = rest.some(p => p.id === s.activePlanId);
+      const visible = rest.filter(p => !p.archived);
+      return {
+        ...s,
+        plans: rest,
+        activePlanId: stillActive ? s.activePlanId : visible[Math.max(0, visibleIndex - 1)].id
+      };
+    });
+    notify(t("toast.planDeleted", { name: removed.name }), {
+      label: t("common.undo"),
+      run: () =>
+        setPlannerState(s => {
+          const next = [...s.plans];
+          next.splice(Math.min(fullIndex, next.length), 0, removed);
+          return { ...s, plans: next, activePlanId: removed.id };
+        })
+    });
   }
 
-  function duplicatePlan() {
-    const id = Date.now();
+  function movePlan(id, step) {
+    setPlannerState(s => {
+      const visible = s.plans.filter(p => !p.archived);
+      const neighbour = visible[visible.findIndex(p => p.id === id) + step];
+      if (!neighbour) return s;
+      const i = s.plans.findIndex(p => p.id === id);
+      const j = s.plans.findIndex(p => p.id === neighbour.id);
+      const next = [...s.plans];
+      [next[i], next[j]] = [next[j], next[i]];
+      return { ...s, plans: next };
+    });
+  }
+
+  function archivePlan(id) {
+    if (plans.length <= 1) return;
+    const plan = plans.find(p => p.id === id);
+    const visibleIndex = plans.findIndex(p => p.id === id);
     setPlannerState(s => ({
       ...s,
-      plans: [...s.plans, { id, name: `${activePlan.name} copy`, data: structuredClone(activePlan.data) }],
+      plans: s.plans.map(p => (p.id === id ? { ...p, archived: true } : p)),
+      activePlanId: s.activePlanId === id ? plans[visibleIndex === 0 ? 1 : visibleIndex - 1].id : s.activePlanId
+    }));
+    notify(t("toast.planArchived", { name: plan.name }), {
+      label: t("common.undo"),
+      run: () =>
+        setPlannerState(s => ({
+          ...s,
+          plans: s.plans.map(p => (p.id === id ? { ...p, archived: false } : p)),
+          activePlanId: id
+        }))
+    });
+  }
+
+  function restorePlan(id) {
+    setPlannerState(s => ({
+      ...s,
+      plans: s.plans.map(p => (p.id === id ? { ...p, archived: false } : p)),
       activePlanId: id
     }));
+    notify(t("toast.planRestored", { name: allPlans.find(p => p.id === id).name }));
   }
 
-  function resetPlan() {
-    updatePlan(structuredClone(emptyPlan));
+  function reorderPlan(fromId, toId) {
+    setPlannerState(s => {
+      const from = s.plans.findIndex(p => p.id === fromId);
+      const to = s.plans.findIndex(p => p.id === toId);
+      if (from < 0 || to < 0) return s;
+      const next = [...s.plans];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return { ...s, plans: next };
+    });
   }
 
   /* ---------- meal actions ---------- */
-  function addMeal(after) {
-    const meals = [...mealPlan.meals];
-    meals.splice(after + 1, 0, { name: "New Meal", items: [] });
-    updatePlan({ ...mealPlan, meals });
-  }
-
-  function removeMeal(i) {
-    if (mealPlan.meals.length <= 1) return;
-    updatePlan({
-      ...mealPlan,
-      meals: mealPlan.meals.filter((_, idx) => idx !== i)
+  function addMeal(afterIndex) {
+    updateMeals(ms => {
+      const next = [...ms];
+      next.splice(afterIndex + 1, 0, createMeal(t("meal.newMeal")));
+      return next;
     });
   }
 
   function duplicateMeal(i) {
-    const meals = [...mealPlan.meals];
-    meals.splice(i + 1, 0, structuredClone(mealPlan.meals[i]));
-    updatePlan({ ...mealPlan, meals });
+    updateMeals(ms => {
+      const next = [...ms];
+      next.splice(i + 1, 0, cloneMeal(ms[i]));
+      return next;
+    });
+  }
+
+  function moveMeal(i, step) {
+    updateMeals(ms => {
+      const j = i + step;
+      if (j < 0 || j >= ms.length) return ms;
+      const next = [...ms];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
+  function removeMeal(i) {
+    if (meals.length <= 1) return;
+    const removed = meals[i];
+    const planId = activePlan.id;
+    updateMeals(ms => ms.filter((_, idx) => idx !== i));
+    notify(t("toast.mealRemoved", { name: removed.name }), {
+      label: t("common.undo"),
+      run: () =>
+        setPlannerState(s => ({
+          ...s,
+          plans: s.plans.map(p => {
+            if (p.id !== planId) return p;
+            const next = [...p.data.meals];
+            next.splice(Math.min(i, next.length), 0, removed);
+            return { ...p, data: { ...p.data, meals: next } };
+          })
+        }))
+    });
+  }
+
+  function clearMeal(mealId) {
+    const before = activePlan.data;
+    const name = meals.find(m => m.id === mealId).name;
+    mapMeal(mealId, m => ({ ...m, items: [] }));
+    notify(t("toast.mealCleared", { name }), {
+      label: t("common.undo"),
+      run: () => restoreData(activePlan.id, before)
+    });
   }
 
   /* ---------- item actions ---------- */
-function addItem(mealIndex) {
-  const meals = mealPlan.meals.map((m, i) =>
-    i === mealIndex
-      ? {
-          ...m,
-          items: [
-            ...m.items,
-            {
-              id: crypto.randomUUID(),
-              productId: PLACEHOLDER_ID,
-              amount: 0,
-              note: "Enter an item on the Products tab",
-            },
-          ],
-        }
-      : m
-  );
-  updatePlan({ ...mealPlan, meals });
-}
+  const addItem = (mealId, product) =>
+    mapMeal(mealId, m => ({ ...m, items: [...m.items, createItem(product.id, product.servingGrams)] }));
 
-function updateItem(mi, ii, field, value) {
-  const meals = mealPlan.meals.map((m, i) =>
-    i !== mi
-      ? m
-      : {
-          ...m,
-          items: m.items.map((it, idx) => {
-            if (idx !== ii) return it;
+  const updateItem = (mealId, itemId, patch) =>
+    mapMeal(mealId, m => ({
+      ...m,
+      items: m.items.map(it => (it.id === itemId ? { ...it, ...patch } : it))
+    }));
 
-            let next = {
-              ...it,
-              [field]:
-                field === "amount"
-                  ? Number(value) || 0
-                  : field === "productId"
-                  ? value
-                  : value
-            };
-            if (
-              field === "productId" &&
-              value !== PLACEHOLDER_ID &&
-              it.amount === 0
-            ) {
-              const product = products.find(
-                p => p.id === Number(value)
-              );
-              if (product) {
-                next.amount = product.servingGrams ?? 100;
-              }
-            }
+  const removeItem = (mealId, itemId) =>
+    mapMeal(mealId, m => ({ ...m, items: m.items.filter(it => it.id !== itemId) }));
 
-            return next;
-          })
-        }
-  );
-
-  updatePlan({ ...mealPlan, meals });
-}
-
-  function removeItem(mi, ii) {
-    const meals = mealPlan.meals.map((m, i) =>
-      i === mi ? { ...m, items: m.items.filter((_, idx) => idx !== ii) } : m
-    );
-    updatePlan({ ...mealPlan, meals });
+  /* ---------- recipes ---------- */
+  function saveRecipe(meal) {
+    const name = window.prompt(t("recipe.namePrompt"), meal.name);
+    if (!name?.trim()) return;
+    setRecipes(rs => [...rs, createRecipe(name.trim(), meal.items)]);
+    notify(t("toast.recipeSaved", { name: name.trim() }));
   }
 
-  const dailyTotals = mealPlan.meals.reduce(
-    (a, m) => {
-      const t = sumFromRows(m.items, products);
-      a.cal += t.cal;
-      a.protein += t.protein;
-      a.carbs += t.carbs;
-      a.fat += t.fat;
-      return a;
-    },
-    { cal: 0, protein: 0, carbs: 0, fat: 0 }
-  );
+  function addRecipe(mealId, recipe) {
+    const usable = recipe.items.filter(it => productMap.has(it.productId));
+    if (!usable.length) return notify(t("toast.recipeEmpty"));
+    mapMeal(mealId, m => ({
+      ...m,
+      items: [...m.items, ...usable.map(it => createItem(it.productId, it.amount))]
+    }));
+    const skipped = recipe.items.length - usable.length;
+    notify(skipped ? t("toast.recipeAddedSkipped", { name: recipe.name, n: skipped }) : t("toast.recipeAdded", { name: recipe.name }));
+  }
 
-  const remaining = {
-    cal: mealPlan.profile.calories - dailyTotals.cal,
-    protein: mealPlan.profile.protein - dailyTotals.protein,
-    carbs: mealPlan.profile.carbs - dailyTotals.carbs,
-    fat: mealPlan.profile.fat - dailyTotals.fat,
-  };
+  /* ---------- plan-level tools ---------- */
+  function autoFill(macro) {
+    const result = scaleToTarget(activePlan.data, productMap, macro, profile[PROFILE_KEY[macro]]);
+    if (result.error) return notify(t(`auto.${result.error}`));
+    const before = activePlan.data;
+    updateData(() => result.data);
+    notify(t("toast.scaled", { macro: t(MACRO_LABEL_KEYS[macro]).toLowerCase(), factor: result.factor.toFixed(2) }), {
+      label: t("common.undo"),
+      run: () => restoreData(activePlan.id, before)
+    });
+  }
 
-  /* ---------- render ---------- */
+  function exportCsv(id) {
+    const plan = plans.find(p => p.id === id);
+    downloadFile(plansToCSV([plan], productMap), `${plan.name || "plan"}.csv`, "text/csv;charset=utf-8");
+  }
+
+  async function exportImage(id) {
+    const plan = plans.find(p => p.id === id);
+    try {
+      const canvas = renderPlanCanvas(plan, productMap, { t, lang });
+      downloadFile(await canvasToBlob(canvas), `${plan.name || "plan"}.png`, "image/png");
+      notify(t("toast.imageSaved"));
+    } catch {
+      notify(t("toast.imageFail"));
+    }
+  }
+
+  /* ---------- smart meal builder ---------- */
+  const builderMeal = meals.find(m => m.id === builderMealId);
+
+  function builderDefaults(meal) {
+    if (hasTarget(meal.target)) return { target: meal.target, source: "meal" };
+    if (hasTarget(profile)) {
+      const left = k => (profile[k] > 0 ? Math.max(0, Math.round((profile[k] - dailyTotals[k === "calories" ? "cal" : k]) * 10) / 10) : 0);
+      return {
+        target: { calories: left("calories"), protein: left("protein"), carbs: left("carbs"), fat: left("fat") },
+        source: "remaining"
+      };
+    }
+    return { target: { calories: 0, protein: 0, carbs: 0, fat: 0 }, source: null };
+  }
+
+  function addBuilt(mealId, items, { replace }) {
+    mapMeal(mealId, m => ({
+      ...m,
+      items: [
+        ...(replace ? m.items.filter(it => it.locked) : m.items),
+        ...items.map(it => createItem(it.productId, it.amount))
+      ]
+    }));
+    notify(t("toast.builderAdded"));
+    setBuilderMealId(null);
+  }
+
+  async function copyText(id) {
+    const plan = plans.find(p => p.id === id);
+    const ok = await copyToClipboard(planToText(plan, productMap));
+    notify(ok ? t("toast.copiedText") : t("toast.clipboardFail"));
+  }
+
   return (
     <div className="planner">
-              {toast && (
-        <div className="toast">
-          {toast}
+      <PlanTabs
+        plans={plans}
+        archived={archivedPlans}
+        activeId={activePlan.id}
+        totals={totalsByPlan}
+        onSelect={id => setPlannerState(s => ({ ...s, activePlanId: id }))}
+        onAdd={addPlan}
+        onRename={(id, name) => patchPlan(id, { name })}
+        onDuplicate={duplicatePlan}
+        onArchive={archivePlan}
+        onRestore={restorePlan}
+        onRemove={removePlan}
+        onMove={movePlan}
+        onReorder={reorderPlan}
+        onColor={(id, color) => patchPlan(id, { color })}
+        onExportCsv={exportCsv}
+        onExportAllCsv={() =>
+          downloadFile(plansToCSV(plans, productMap), "all-plans.csv", "text/csv;charset=utf-8")
+        }
+        onCopyText={copyText}
+        onShare={onSharePlan}
+        onPrint={id => onPrint({ kind: "plan", id })}
+        onImage={exportImage}
+      />
+
+      {products.length === 0 && (
+        <div className="glass-card empty-state">
+          <span><strong>{t("planner.noProducts")}</strong> {t("planner.noProductsHint")}</span>
+          <button className="primary-btn" onClick={() => onCreateProduct("")}>{t("planner.addProducts")}</button>
         </div>
       )}
-      {/* PLAN TABS */}
-      <div className="plan-tabs">
-        {plans.map(p => (
-          <div key={p.id} className="plan-tab-wrapper">
-            <input
-              value={p.name}
-              className={`plan-tab ${p.id === activePlanId ? "active" : ""}`}
-              readOnly={editingPlanId !== p.id}
-              onClick={() => setPlannerState(s => ({ ...s, activePlanId: p.id }))}
-              onDoubleClick={() => setEditingPlanId(p.id)}
-              onChange={e =>
-                setPlannerState(s => ({
-                  ...s,
-                  plans: s.plans.map(pl => pl.id === p.id ? { ...pl, name: e.target.value } : pl)
-                }))
-              }
-              onBlur={() => setEditingPlanId(null)}
-            />
-            <button
-              className="icon-btn"
-              onClick={() =>
-                setOpenPlanMenu(openPlanMenu === p.id ? null : p.id)
-              }
-            >
-              ⋯
-            </button>
 
-            {openPlanMenu === p.id && (
-              <div ref={menuRef} className="menu floating">
-                <button onClick={duplicatePlan}>Duplicate plan</button>
-                <button className="danger" onClick={() => removePlan(p.id)}>
-                  Remove plan
-                </button>
-              </div>
-            )}
-            </div>
-        ))}
-        <button onClick={addPlan}>＋</button>
-      </div>
+      {meals.map((meal, mi) => (
+        <MealCard
+          key={meal.id}
+          meal={meal}
+          index={mi}
+          count={meals.length}
+          products={products}
+          productMap={productMap}
+          recipes={recipes}
+          onRename={name => mapMeal(meal.id, m => ({ ...m, name }))}
+          onAddItem={p => addItem(meal.id, p)}
+          onUpdateItem={(itemId, patch) => updateItem(meal.id, itemId, patch)}
+          onRemoveItem={itemId => removeItem(meal.id, itemId)}
+          onAddMeal={() => addMeal(mi)}
+          onDuplicate={() => duplicateMeal(mi)}
+          onMove={step => moveMeal(mi, step)}
+          onClear={() => clearMeal(meal.id)}
+          onRemove={() => removeMeal(mi)}
+          onTarget={patch => mapMeal(meal.id, m => ({ ...m, target: { ...m.target, ...patch } }))}
+          onSaveRecipe={() => saveRecipe(meal)}
+          onBuild={() => setBuilderMealId(meal.id)}
+          onAddRecipe={r => addRecipe(meal.id, r)}
+          onCreateProduct={onCreateProduct}
+        />
+      ))}
 
-            {/* MEALS */}
-            {mealPlan.meals.map((meal, mi) => {
-              const totals = sumFromRows (meal.items, products);
-              return (
-            <section key={mi} className="glass-card meal-card">
-              <div className="meal-header-row">
-                <input
-                className="meal-name-input"
-                value={meal.name || ""}
-                onChange={e => {
-                  const meals = mealPlan.meals.map((m, i) =>
-                  i === mi ? { ...m, name: e.target.value} : m
-                  );
-                  updatePlan ({ ...mealPlan, meals });
-                  }}
-                />
-                <div className="menu-anchor">
-                <button className="icon-btn" onClick={() => setOpenMealMenu (mi)}>…</button>
-                {openMealMenu === mi && (
-                <div ref={menuRef} className="menu floating">
-                <button onClick={() => addMeal (mi)}>Add meal below</button>
-                <button onClick={() => duplicateMeal(mi)}>Duplicate</button>
-                <button className="danger" onClick={() => removeMeal (mi)}>Remove</button>
-                </div>
-                )}
-              </div>
-            </div>
+      <button className="add-meal-btn" onClick={() => addMeal(meals.length - 1)}>{t("meal.addMealBtn")}</button>
 
+      <TotalsBar
+        hidden={summaryInView}
+        profile={profile}
+        totals={dailyTotals}
+        onDetails={() => document.getElementById("summary-card")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+      />
 
-
-            <div className="meal-header">
-              <div>Item</div><div>Amount</div><div>Calories</div><div>Protein</div><div>Carbs</div><div>Fat</div><div />
-            </div>
-
-            {meal.items.map((it, ii) => {
-              const isPlaceholder = it.productId === PLACEHOLDER_ID;
-              const product = isPlaceholder
-                ? null
-                : products.find(p => p.id === it.productId);
-
-              const m = calcMacros(product, it.amount);
-
-              return (
-                <div key={it.id || ii} className="meal-row">
-                  <select
-                    value={it.productId}
-                    onChange={e =>
-                      updateItem(
-                        mi,
-                        ii,
-                        "productId",
-                        e.target.value === PLACEHOLDER_ID
-                          ? PLACEHOLDER_ID
-                          : Number(e.target.value)
-                      )
-                    }
-
-                    className={isPlaceholder ? "muted" : ""}
-                  >
-                    <option value={PLACEHOLDER_ID} disabled>
-                      Enter an item on the Products tab
-                    </option>
-
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-
-
-                  <input
-                    type="number"
-                    value={it.amount}
-                    onChange={e => updateItem(mi, ii, "amount", e.target.value)}
-                    disabled={isPlaceholder}
-                  />
-                  
-                  <div className="cal">{m.cal.toFixed(0)}</div>
-                  <div className="p">{m.protein.toFixed(1)}</div>
-                  <div className="c">{m.carbs.toFixed(1)}</div>
-                  <div className="f">{m.fat.toFixed(1)}</div>
-
-                  <button className="danger" onClick={() => removeItem(mi, ii)}>✕</button>
-                </div>
-              );
-            })}
-
-            <div className="meal-row meal-total">
-              <div className="add-button">
-                <button onClick={() => addItem(mi)}>＋</button>
-                </div>
-
-              <div className="muted">Meal total</div>
-
-              <div className="col-cal">{totals.cal.toFixed(0)} </div>
-              <div className="col-p">{totals.protein.toFixed(1)}</div>
-              <div className="col-c">{totals.carbs.toFixed(1)} </div>
-              <div className="col-f">{totals.fat.toFixed(1)}</div>
-
-              <div></div>
-            </div>
-          </section>
+      {builderMeal && (() => {
+        const d = builderDefaults(builderMeal);
+        return (
+          <MealBuilder
+            key={builderMeal.id}
+            products={products}
+            mealName={builderMeal.name}
+            defaultTarget={d.target}
+            targetSource={d.source}
+            onAdd={(items, opts) => addBuilt(builderMeal.id, items, opts)}
+            onClose={() => setBuilderMealId(null)}
+            onCreateProduct={name => {
+              setBuilderMealId(null);
+              onCreateProduct(name);
+            }}
+          />
         );
-      })}
+      })()}
 
-      <button className="danger" onClick={resetPlan}>Clear all</button>
-        <section className="glass-card daily-summary">
-          <h3>Targets & Totals</h3>
-
-          <div className="summary-grid">
-            <div></div>
-            <div>Calories</div>
-            <div>Protein</div>
-            <div>Carbs</div>
-            <div>Fat</div>
-
-            {/* TARGETS */}
-            <div className="row-label">Target</div>
-
-            <input
-              type="number"
-              value={mealPlan.profile.calories || ""}
-              onChange={e =>
-                updatePlan({
-                  ...mealPlan,
-                  profile: { ...mealPlan.profile, calories: +e.target.value || 0 }
-                })
-              }
-            />
-
-            <input
-              type="number"
-              value={mealPlan.profile.protein || ""}
-              onChange={e =>
-                updatePlan({
-                  ...mealPlan,
-                  profile: { ...mealPlan.profile, protein: +e.target.value || 0 }
-                })
-              }
-            />
-
-            <input
-              type="number"
-              value={mealPlan.profile.carbs || ""}
-              onChange={e =>
-                updatePlan({
-                  ...mealPlan,
-                  profile: { ...mealPlan.profile, carbs: +e.target.value || 0 }
-                })
-              }
-            />
-
-            <input
-              type="number"
-              value={mealPlan.profile.fat || ""}
-              onChange={e =>
-                updatePlan({
-                  ...mealPlan,
-                  profile: { ...mealPlan.profile, fat: +e.target.value || 0 }
-                })
-              }
-            />
-
-            {/* TOTALS */}
-            <div className="row-label">Actual</div>
-
-            <div className={proximityClass(dailyTotals.cal, mealPlan.profile.calories)}>
-              {dailyTotals.cal.toFixed(0)}
-            </div>
-
-            <div className={proximityClass(dailyTotals.protein, mealPlan.profile.protein)}>
-              {dailyTotals.protein.toFixed(1)}
-            </div>
-
-            <div className={proximityClass(dailyTotals.carbs, mealPlan.profile.carbs)}>
-              {dailyTotals.carbs.toFixed(1)}
-            </div>
-
-            <div className={proximityClass(dailyTotals.fat, mealPlan.profile.fat)}>
-              {dailyTotals.fat.toFixed(1)}
-            </div>
-            <div className="row-label">Remaining</div>
-
-            <div className={`remaining-row ${proximityClass(
-              mealPlan.profile.calories - remaining.cal,
-              mealPlan.profile.calories
-            )}`}>
-              {remaining.cal.toFixed(0)}
-            </div>
-
-            <div className={`remaining-row ${proximityClass(
-              mealPlan.profile.protein - remaining.protein,
-              mealPlan.profile.protein
-            )}`}>
-              {remaining.protein.toFixed(1)}
-            </div>
-
-            <div className={`remaining-row ${proximityClass(
-              mealPlan.profile.carbs - remaining.carbs,
-              mealPlan.profile.carbs
-            )}`}>
-              {remaining.carbs.toFixed(1)}
-            </div>
-
-            <div className={`remaining-row ${proximityClass(
-              mealPlan.profile.fat - remaining.fat,
-              mealPlan.profile.fat
-            )}`}>
-              {remaining.fat.toFixed(1)}
-            </div>
-          </div>
-        </section>
+      <SummaryCard
+        id="summary-card"
+        profile={profile}
+        totals={dailyTotals}
+        onProfile={patch => updateData(d => ({ ...d, profile: { ...d.profile, ...patch } }))}
+        onAutoFill={autoFill}
+      />
     </div>
   );
 }

@@ -9,8 +9,8 @@
 }
 
 .gm-modal {
-  background: #141414;
-  color: #f3f3f3;
+  background: var(--modal-bg);
+  color: var(--text);
   max-width: 420px;
   padding: 24px;
   border-radius: 14px;
@@ -29,8 +29,8 @@
 
 .btn-primary {
   flex: 1;
-  background: #3ddc97;
-  color: #000;
+  background: var(--mint);
+  color: var(--on-mint);
   border: none;
   padding: 10px;
   border-radius: 8px;
@@ -40,9 +40,9 @@
 
 .btn-secondary {
   flex: 1;
-  background: #222;
-  color: #fff;
-  border: 1px solid #333;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 10px;
   border-radius: 8px;
   cursor: pointer;
@@ -53,3 +53,9 @@
   opacity: 0.7;
   margin-top: 16px;
 }
+
+.gm-modal-actions.column {
+  flex-direction: column;
+}
+
+.gm-modal { width: min(420px, calc(100vw - 32px)); }
