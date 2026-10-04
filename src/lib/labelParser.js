@@ -23,7 +23,8 @@ function fatValue(t) {
 }
 
 export function parseLabel(raw) {
-  const t = raw.toLowerCase().replace(/[ \t]+/g, " ");
+  // NFKC folds full-width colons/spaces/digits (：　１) to their ASCII forms
+  const t = raw.normalize("NFKC").toLowerCase().replace(/[ \t]+/g, " ");
 
   let cal = first(t, [
     new RegExp(`${NUM}\\s*kcal`),
@@ -47,9 +48,9 @@ export function parseLabel(raw) {
   ]);
   const fat = fatValue(t);
 
-  const servingMatch = t.match(
-    new RegExp(`(?:serving size|per serving|serving|1食|1回分|内容量|per)[^\\d\\n]{0,15}${NUM}\\s*(g|ml)\\b`)
-  );
+  const servingMatch =
+    t.match(new RegExp(`(?:serving size|per serving|serving|1食|1回分|内容量|per)[^\\d\\n]{0,15}${NUM}\\s*(g|ml)\\b`)) ||
+    t.match(new RegExp(`${NUM}\\s*(g|ml)\\s*(?:あたり|当たり|当り)`));
   const servingGrams = servingMatch ? toNum(servingMatch[1]) : 100;
   const unit = servingMatch ? servingMatch[2] : /\d\s*ml\b/.test(t) ? "ml" : "g";
 

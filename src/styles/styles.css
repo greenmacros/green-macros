@@ -192,7 +192,6 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .tabs button.active { color: var(--text); border-bottom-color: var(--mint); background: none; }
 .tabs button:hover:not(:disabled) { color: var(--text); background: none; }
 
-.share-btn { background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 14px; }
 
 /* ==============================
    Menus & popovers
@@ -529,9 +528,10 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
   .topbar h1 { order: 1; }
   .share-anchor { order: 2; }
   .settings-anchor { order: 3; }
-  .tabs { order: 4; width: auto; flex: 1; }
-  .lang-switch { order: 5; }
-  .theme-switch { order: 6; }
+  .tour-btn { order: 4; }
+  .tabs { order: 5; width: auto; flex: 1; }
+  .lang-switch { order: 6; }
+  .theme-switch { order: 7; }
 
   .meal-header { display: none; }
   .meal-row {

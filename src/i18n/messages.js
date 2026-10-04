@@ -298,6 +298,75 @@ export const MESSAGES = {
     "Open Food Facts に接続できません。通信状況を確認してもう一度お試しください。"
   ),
 
+  /* tour */
+  "tour.title": m("Guided tour", "ガイドツアー"),
+  "tour.button": m("How to use", "使い方"),
+  "tour.step": m("Step {n} of {total}", "{n} / {total}"),
+  "tour.next": m("Next", "次へ"),
+  "tour.back": m("Back", "戻る"),
+  "tour.skip": m("Skip", "スキップ"),
+  "tour.done": m("Done", "完了"),
+  "tour.welcome.title": m("Quick tour", "クイックツアー"),
+  "tour.welcome.body": m(
+    "A 1-minute look at how GreenMacros works. Use the arrow keys or the buttons; Esc closes it. You can reopen it anytime with the ? button.",
+    "1分でわかる GreenMacros の使い方です。矢印キーまたはボタンで進み、Esc で閉じます。右上の ? ボタンでいつでも再開できます。"
+  ),
+  "tour.tabs.title": m("Three tabs", "3つのタブ"),
+  "tour.tabs.body": m(
+    "Plan is for building a day of meals, Week assigns plans to days, and Products is your food list.",
+    "「プラン」は1日の食事を作る場所、「週間」はプランを曜日に割り当て、「食品」は食品リストです。"
+  ),
+  "tour.plans.title": m("Plans", "プラン"),
+  "tour.plans.body": m(
+    "Each plan is one day of eating, e.g. Workout day or Rest day. Use + to add another and the tab’s edit options to rename, recolor or delete it.",
+    "1つのプランが1日分の食事です（例：トレーニング日、休息日）。＋で追加し、タブの編集で名前・色の変更や削除ができます。"
+  ),
+  "tour.meal.title": m("Meals", "食事"),
+  "tour.meal.body": m(
+    "Each card is a meal. Rename it, set optional macro targets, and reorder or duplicate it from its menu.",
+    "1枚のカードが1食です。名前の変更、栄養目標の設定、並べ替えや複製ができます。"
+  ),
+  "tour.additem.title": m("Add foods", "食品を追加"),
+  "tour.additem.body": m(
+    "Search your products here to add them to the meal, then type an amount. The builder fills a meal toward a macro target for you.",
+    "ここで食品を検索して食事に追加し、量を入力します。ビルダーを使うと目標に合わせて自動で組み立てられます。"
+  ),
+  "tour.summary.title": m("Daily totals", "1日の合計"),
+  "tour.summary.body": m(
+    "Set your daily calorie and macro targets. Actual and Remaining update as you add food, and Auto-fill adjusts amounts to hit a macro.",
+    "1日のカロリーと栄養目標を設定します。食品を追加すると実績と残りが更新され、自動調整で量を目標に合わせられます。"
+  ),
+  "tour.week.title": m("Weekly view", "週間ビュー"),
+  "tour.week.body": m(
+    "Assign one of your plans to each day, leave a day as rest, and print the whole week.",
+    "各曜日にプランを割り当て、休息日はそのままにして、1週間分を印刷できます。"
+  ),
+  "tour.filters.title": m("Find products", "食品を探す"),
+  "tour.filters.body": m(
+    "Search, sort and filter your list by category, and switch between list views.",
+    "食品リストを検索・並べ替え・カテゴリで絞り込み、表示を切り替えられます。"
+  ),
+  "tour.manual.title": m("Add by hand", "手入力で追加"),
+  "tour.manual.body": m(
+    "Type in a product’s name and macros yourself, or use the … menu for starter foods and duplicate cleanup.",
+    "食品名と栄養素を手入力できます。… メニューにはスターター食品や重複の整理もあります。"
+  ),
+  "tour.addpanel.title": m("More ways to add", "いろいろな追加方法"),
+  "tour.addpanel.body": m(
+    "Search the built-in Food list, look up Online, paste a nutrition Label (English or Japanese) or build Recipes.",
+    "内蔵の食品リストから検索、オンライン検索、栄養成分表示（英語・日本語）の貼り付け、レシピ作成ができます。"
+  ),
+  "tour.share.title": m("Share", "共有"),
+  "tour.share.body": m(
+    "Copy a link to the current plan, or to all plans, to send to someone.",
+    "現在のプラン、またはすべてのプランへのリンクをコピーして共有できます。"
+  ),
+  "tour.settings.title": m("Backups", "バックアップ"),
+  "tour.settings.body": m(
+    "Your data is stored only in this browser. Export a backup here regularly, and restore or import files too.",
+    "データはこのブラウザにのみ保存されます。ここから定期的にバックアップを書き出し、復元や読み込みもできます。"
+  ),
+
   /* label import */
   "label.placeholder": m(
     "Seitan Strips\nServing size 85g\nCalories 120\nProtein 21g\nTotal Carbohydrate 4g\nTotal Fat 2g",

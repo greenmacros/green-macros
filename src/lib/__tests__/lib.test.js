@@ -70,6 +70,14 @@ describe("labelParser", () => {
     expect(parseLabel("Energy 1200 kJ / 290 kcal\nProtein 3,5 g").product).toMatchObject({ cal: 290, protein: 3.5 });
     expect(parseLabel("Energy 418 kJ").product.cal).toBe(100);
   });
+  it("parses Japanese labels with full-width colons and spaces", () => {
+    const { product, missing, assumedServing } = parseLabel(
+      "【栄養成分表示（100gあたり）】\n熱量　　　　　：103kcal\nたんぱく質　　：20.0g\n脂質　　　　　：0.6g\nコレステロール：0mg\n炭水化物　　　：8.1g\n　ー食物繊維　：7.0g\n食塩相当量　　：0.6g"
+    );
+    expect(product).toMatchObject({ servingGrams: 100, cal: 103, protein: 20, fat: 0.6, carbs: 8.1 });
+    expect(missing).toEqual([]);
+    expect(assumedServing).toBe(false);
+  });
   it("flags missing fields", () => {
     expect(parseLabel("hello").missing).toHaveLength(4);
   });

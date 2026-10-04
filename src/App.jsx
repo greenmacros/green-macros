@@ -5,6 +5,8 @@ import ThemeSwitch from "./components/ThemeSwitch";
 import Footer from "./components/Footer";
 import Menu from "./components/Menu";
 import ShareImportModal from "./components/ShareImportModal";
+import Icon from "./components/Icon";
+import Tour from "./components/Tour";
 import Toast from "./components/Toast";
 import FitProduct from "./planner/FitProduct";
 import PlannerTab from "./planner/PlannerTab";
@@ -30,6 +32,20 @@ import { STORAGE_KEYS, loadJSON, loadString, saveJSON, saveString } from "./lib/
 
 const MAX_COMFY_URL = 8000;
 const TABS = ["planner", "week", "products"];
+const TOUR_STEPS = [
+  { id: "welcome" },
+  { id: "tabs", target: ".tabs" },
+  { id: "plans", target: ".plan-tabs-bar", tab: "planner" },
+  { id: "meal", target: ".meal-card" },
+  { id: "additem", target: ".meal-card .add-item" },
+  { id: "summary", target: ".daily-summary" },
+  { id: "week", target: ".week-grid", tab: "week" },
+  { id: "filters", target: ".products-tab .toolbar", tab: "products" },
+  { id: "manual", target: ".products-tab .heading-actions" },
+  { id: "addpanel", target: ".add-panel" },
+  { id: "share", target: ".share-anchor" },
+  { id: "settings", target: ".settings-anchor" }
+].map(s => ({ ...s, title: `tour.${s.id}.title`, body: `tour.${s.id}.body` }));
 
 function readShareFromUrl() {
   const s = new URLSearchParams(window.location.search).get("s");
@@ -62,6 +78,7 @@ export default function App() {
 
   const [initialShare] = useState(readShareFromUrl);
   const [pendingShare, setPendingShare] = useState(initialShare?.shared ?? null);
+  const [tourOpen, setTourOpen] = useState(false);
   const [visited, setVisited] = useState(() => Boolean(loadString(STORAGE_KEYS.visited)));
   const [installEvent, setInstallEvent] = useState(null);
   const { theme, toggle: toggleTheme } = useTheme();
@@ -269,6 +286,7 @@ export default function App() {
     }
     saveString(STORAGE_KEYS.visited, "1");
     setVisited(true);
+    setTourOpen(true);
   }
 
   /* ---------- sharing ---------- */
@@ -366,6 +384,8 @@ export default function App() {
         <FirstRunModal onFresh={() => finishFirstRun(false)} onPreset={() => finishFirstRun(true)} />
       )}
 
+      {tourOpen && <Tour steps={TOUR_STEPS} tab={tab} onTab={setTab} onClose={() => setTourOpen(false)} />}
+
       <header className="topbar">
         <div className="topbar-left">
           <h1>GreenMacros</h1>
@@ -385,9 +405,7 @@ export default function App() {
         </div>
 
         <div className="topbar-right">
-          <LangSwitch />
-          <ThemeSwitch theme={theme} onChange={toggleTheme} />
-          <Menu label={t("share.button")} title={t("share.button")} className="share-btn" anchorClassName="share-anchor">
+          <Menu label={<Icon name="share" size={18} />} title={t("share.button")} anchorClassName="share-anchor">
             <button disabled={!activePlan} onClick={() => copyShareLink([activePlan])}>
               {t("share.copyCurrent")}
             </button>
@@ -423,6 +441,9 @@ export default function App() {
               </>
             )}
           </Menu>
+          <button type="button" className="icon-btn tour-btn" title={t("tour.button")} aria-label={t("tour.button")} onClick={() => setTourOpen(true)}>?</button>
+          <LangSwitch />
+          <ThemeSwitch theme={theme} onChange={toggleTheme} />
         </div>
 
         {Object.entries(fileInputs).map(([kind, ref]) => (
