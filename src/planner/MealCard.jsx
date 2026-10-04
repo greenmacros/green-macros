@@ -27,7 +27,6 @@ export default function MealCard({
   onRemove,
   onTarget,
   onSaveRecipe,
-  onBuild,
   onAddRecipe,
   onCreateProduct
 }) {
@@ -152,7 +151,6 @@ export default function MealCard({
           onSelect={p => onAddItem(p)}
           onCreate={onCreateProduct}
         />
-        <button className="link-btn" onClick={onBuild}>{t("builder.button")}</button>
         {recipes.length > 0 && (
           <Menu label={t("meal.addRecipe")} title={t("meal.addRecipe")} className="link-btn" align="left">
             {recipes.map(r => (

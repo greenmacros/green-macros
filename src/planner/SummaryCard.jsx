@@ -1,14 +1,11 @@
-import { useState } from "react";
 import NumInput from "../components/NumInput";
 import { useI18n } from "../i18n/context";
 import { MACRO_KEYS, MACRO_LABEL_KEYS, progressClass } from "../lib/macros";
-import { hasTarget } from "../lib/plans";
 
 const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 
-export default function SummaryCard({ id, profile, totals, onProfile, onAutoFill, suggestOpen, onToggleSuggest, children }) {
+export default function SummaryCard({ id, profile, totals, onProfile }) {
   const { t } = useI18n();
-  const [macro, setMacro] = useState("protein");
 
   return (
     <section id={id} className="glass-card daily-summary">
@@ -65,20 +62,6 @@ export default function SummaryCard({ id, profile, totals, onProfile, onAutoFill
         })}
       </div>
 
-      <div className="autofill-row">
-        <span className="muted">{t("summary.autofill")}</span>
-        <select value={macro} onChange={e => setMacro(e.target.value)} aria-label={t("summary.macroToHit")}>
-          {MACRO_KEYS.map(k => <option key={k} value={k}>{t(MACRO_LABEL_KEYS[k])}</option>)}
-        </select>
-        <button className="primary-btn" disabled={!hasTarget(profile)} onClick={() => onAutoFill(macro)}>
-          {t("summary.scale")}
-        </button>
-        <span className="hint">{t("summary.lockedStay")}</span>
-        <button className="btn-ghost suggest-toggle" aria-expanded={suggestOpen} onClick={onToggleSuggest}>
-          {suggestOpen ? t("balance.hide") : t("balance.show")}
-        </button>
-      </div>
-      {children}
     </section>
   );
 }

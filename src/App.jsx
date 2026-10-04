@@ -20,7 +20,7 @@ import {
 } from "./lib/persistence";
 import { useTheme } from "./theme/useTheme";
 import { buildProductMap } from "./lib/macros";
-import { starterProducts } from "./data/starterProducts";
+import { STARTER_PRODUCTS, starterProducts } from "./data/starterProducts";
 import { useI18n } from "./i18n/context";
 import { MESSAGES } from "./i18n/messages";
 import { backupFilename, buildBackup, formatDateTime, parseBackup } from "./lib/backup";
@@ -284,19 +284,22 @@ export default function App() {
       setPlannerState(normalizePlanner(null, labels));
     }
     if (preset) {
-      setProducts(starterProducts(lang).map(p => createProduct(p)));
+      const created = starterProducts(lang).map(p => createProduct(p));
+      const idByName = new Map(STARTER_PRODUCTS.map((p, i) => [p.name, created[i].id]));
+      setProducts(created);
       setPlannerState(
         normalizePlanner(
-          {
-            plans: starterPlans({
+          starterPlans(
+            {
               workoutDay: t("starter.workoutDay"),
               restDay: t("starter.restDay"),
               breakfast: t("starter.breakfast"),
               lunch: t("starter.lunch"),
               postWorkout: t("starter.postWorkout"),
               dinner: t("starter.dinner")
-            })
-          },
+            },
+            idByName
+          ),
           labels
         )
       );

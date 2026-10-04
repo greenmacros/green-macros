@@ -444,7 +444,6 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .bar-fill.close { background: var(--close); }
 .bar-fill.off { background: var(--danger); }
 
-.autofill-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
 
 /* ==============================
    Products tab
@@ -655,22 +654,8 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 
 .builder-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .builder-tools input { flex: 1 1 200px; }
-.builder-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
-.builder-item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer; border-bottom: 1px solid var(--line); font-size: 14px; }
-.builder-item:last-child { border-bottom: none; }
-.builder-item.on { background: var(--mint-soft); }
-.builder-item span { flex: 1; }
-.builder-item small { color: var(--muted); white-space: nowrap; }
-.builder-targets { display: grid; grid-template-columns: repeat(5, minmax(70px, 1fr)); gap: 10px; margin-top: 8px; }
 .ack { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 10px; font-size: 13px; }
 .builder-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
-.builder-result { margin-top: 8px; border-top: 1px solid var(--border); }
-.builder-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.builder-table th, .builder-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
-.builder-table th:first-child, .builder-table td:first-child { text-align: left; }
-.builder-table th { font-size: 12px; color: var(--muted); font-weight: 600; }
-.builder-table tr.total td { font-weight: 700; }
-.builder-fit { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 4px; font-size: 14px; font-weight: 600; }
 .ok-note { color: var(--ok); }
 
 /* ==============================
@@ -696,7 +681,6 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 }
 
 @media (max-width: 760px) {
-  .builder-targets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ==============================
@@ -793,8 +777,6 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .fit-badge.great { background: var(--mint-soft); color: var(--ok); }
 .fit-badge.good { background: var(--mint-soft); color: var(--mint); }
 .fit-badge.rough { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
-.balance-panel { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
-.suggest-toggle { margin-left: auto; font-size: 13px; }
 @media (max-width: 760px) {
   .swap-row { grid-template-columns: 1fr auto; }
   .swap-row .fit-badge { grid-column: 1; justify-self: start; }

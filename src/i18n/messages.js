@@ -114,7 +114,6 @@ export const MESSAGES = {
   "toast.planDeleted": m("Deleted “{name}”", "「{name}」を削除しました"),
   "toast.mealRemoved": m("Removed “{name}”", "「{name}」を削除しました"),
   "toast.mealCleared": m("Cleared “{name}”", "「{name}」を空にしました"),
-  "toast.scaled": m("Scaled to {macro} target (×{factor})", "{macro}の目標に合わせて調整しました（×{factor}）"),
   "toast.copiedText": m("Plan copied as text", "プランをテキストでコピーしました"),
   "toast.clipboardFail": m("Couldn't access the clipboard", "クリップボードにアクセスできません"),
   "toast.productAdded": m("Added “{name}”", "「{name}」を追加しました"),
@@ -188,13 +187,6 @@ export const MESSAGES = {
   "summary.actual": m("Actual", "実績"),
   "summary.remaining": m("Remaining", "残り"),
   "summary.over": m("+{n} over", "+{n} 超過"),
-  "summary.autofill": m("Auto-fill", "自動調整"),
-  "summary.macroToHit": m("Macro to hit", "合わせる栄養素"),
-  "summary.scale": m("Scale unlocked items to hit target", "固定していない食品の量を目標に合わせて調整"),
-  "summary.lockedStay": m("locked items stay as they are.", "固定した食品はそのままです。"),
-  "auto.noTarget": m("Set a target first.", "先に目標を設定してください。"),
-  "auto.noContribution": m("No unlocked items contribute to that macro.", "その栄養素を含む未固定の食品がありません。"),
-  "auto.lockedExceed": m("Locked items already exceed that target.", "固定した食品だけで目標を超えています。"),
 
   /* week */
   "week.title": m("Week", "週間プラン"),
@@ -328,13 +320,13 @@ export const MESSAGES = {
   ),
   "tour.additem.title": m("Add foods", "食品を追加"),
   "tour.additem.body": m(
-    "Search your products here to add them to the meal, then type an amount. The builder fills a meal toward a macro target for you.",
-    "ここで食品を検索して食事に追加し、量を入力します。ビルダーを使うと目標に合わせて自動で組み立てられます。"
+    "Search your products here to add them to the meal, then type an amount.",
+    "ここで食品を検索して食事に追加し、量を入力します。"
   ),
   "tour.summary.title": m("Daily totals", "1日の合計"),
   "tour.summary.body": m(
-    "Set your daily calorie and macro targets. Actual and Remaining update as you add food, and Auto-fill adjusts amounts to hit a macro.",
-    "1日のカロリーと栄養目標を設定します。食品を追加すると実績と残りが更新され、自動調整で量を目標に合わせられます。"
+    "Set your daily calorie and macro targets. Actual and Remaining update as you add food.",
+    "1日のカロリーと栄養目標を設定します。食品を追加すると実績と残りが更新され。"
   ),
   "tour.week.title": m("Weekly view", "週間ビュー"),
   "tour.week.body": m(
@@ -410,34 +402,6 @@ export const MESSAGES = {
   "advice.ack": m("I understand this is a suggestion, not medical advice.", "これは提案であり、医療上のアドバイスではないことを理解しました。"),
   "advice.needAck": m("Tick the box above to continue.", "続けるには上のチェックを入れてください。"),
 
-  /* meal builder */
-  "builder.button": m("Build from products", "食品から食事を作る"),
-  "builder.title": m("Make a meal with these products", "選んだ食品で食事を作る"),
-  "builder.intro": m(
-    "Pick the products you want to eat and a target — GreenMacros suggests amounts for “{meal}”.",
-    "食べたい食品と目標を選ぶと、「{meal}」の量を提案します。"
-  ),
-  "builder.pick": m("Choose products", "食品を選ぶ"),
-  "builder.favs": m("Favorites only", "お気に入りのみ"),
-  "builder.none": m("Clear", "選択解除"),
-  "builder.selected": m("{n} selected", "{n} 件選択中"),
-  "builder.targets": m("Target for this meal", "この食事の目標"),
-  "builder.source.meal": m("Using this meal's target.", "この食事の目標を使用しています。"),
-  "builder.source.remaining": m("Prefilled with what's left of today's plan target. Edit freely.", "今日のプラン目標の残りを入力済みです。自由に編集できます。"),
-  "builder.source.none": m("Enter what you want this meal to provide (leave a field blank to ignore it).", "この食事で摂りたい量を入力してください（空欄の項目は無視されます）。"),
-  "builder.maxServings": m("Max per item", "1品の上限"),
-  "builder.generate": m("Suggest amounts", "量を提案する"),
-  "builder.regenerate": m("Recalculate", "再計算"),
-  "builder.needInput": m("Select at least one product and enter at least one target.", "食品を1つ以上選び、目標を1つ以上入力してください。"),
-  "builder.result": m("Suggested amounts", "提案された量"),
-  "builder.close": m("Within 10% of your target.", "目標の±10%以内です。"),
-  "builder.short": m("Couldn't reach: {macros} is too low with these products — try adding a product rich in it.", "目標に届きません：これらの食品では {macros} が不足します。それを多く含む食品を追加してみてください。"),
-  "builder.over": m("{macros} ends up above target — these products carry more of it than your target allows.", "{macros} が目標を超えます。選んだ食品に多く含まれています。"),
-  "builder.maxed": m("Uses a very large amount of: {names}. Consider adding other products.", "次の食品が非常に多い量になっています：{names}。他の食品の追加をご検討ください。"),
-  "builder.dropped": m("Left out (not needed for the target): {names}.", "目標に不要なため除外：{names}。"),
-  "builder.replace": m("Replace this meal's unlocked items", "この食事の未固定の食品を置き換える"),
-  "builder.add": m("Add to “{meal}”", "「{meal}」に追加"),
-  "toast.builderAdded": m("Suggested items added — check the amounts", "提案された食品を追加しました。量をご確認ください"),
   /* data-safety notices */
   "notice.ios": m(
     "On iPhone, Safari can erase this app's saved plans if you don't open it for about a week. To keep them safe: tap Share, then “Add to Home Screen”, and open GreenMacros from there. A backup also helps.",
@@ -512,25 +476,6 @@ export const MESSAGES = {
   "fit.swap": m("Swap", "置き換える"),
   "toast.swapped": m("Swapped {from} for {to}", "{from} を {to} に置き換えました"),
 
-  /* optional balance suggestions */
-  "balance.show": m("Suggest ways to balance (optional)", "バランス調整の提案を見る（任意）"),
-  "balance.hide": m("Hide suggestions", "提案を閉じる"),
-  "balance.optional": m(
-    "Optional. Nothing changes unless you press Apply, and you can undo.",
-    "任意の機能です。「適用」を押さない限り何も変更されず、元に戻すこともできます。"
-  ),
-  "balance.noTarget": m("Set at least one target above to get suggestions.", "提案を表示するには、上で目標を1つ以上設定してください。"),
-  "balance.balanced": m("Already within 5% of every target — nothing to fix.", "すべての目標の±5%以内です。調整は不要です。"),
-  "balance.none": m(
-    "No simple edit gets you meaningfully closer. Try “Build from products” on a meal.",
-    "簡単な変更では目標に近づけません。食事の「食品から食事を作る」をお試しください。"
-  ),
-  "balance.addTo": m("Add new items to", "追加先の食事"),
-  "balance.add": m("Add {name} {amount} to {meal}", "{meal} に {name} を {amount} 追加"),
-  "balance.scale": m("Change {name}: {from} → {to}", "{name} の量を変更：{from} → {to}"),
-  "balance.remove": m("Remove {name} ({amount}) from {meal}", "{meal} から {name}（{amount}）を外す"),
-  "balance.apply": m("Apply", "適用"),
-  "toast.suggestionApplied": m("Suggestion applied", "提案を適用しました"),
   /* organize mode */
   "organize.start": m("Organize", "並べ替え"),
   "organize.done": m("Done", "完了"),

@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import BalancePanel from "./BalancePanel";
-import MealBuilder from "./MealBuilder";
 import OrganizeView from "./OrganizeView";
 import MealCard from "./MealCard";
 import PlanTabs from "./PlanTabs";
@@ -8,14 +6,11 @@ import SummaryCard from "./SummaryCard";
 import TotalsBar from "./TotalsBar";
 import { useI18n } from "../i18n/context";
 import { canvasToBlob, renderPlanCanvas } from "../lib/planImage";
-import { scaleToTarget } from "../lib/autoBalance";
 import { copyToClipboard, downloadFile, planToText, plansToCSV } from "../lib/exporters";
-import { MACRO_LABEL_KEYS, buildProductMap, sumMeals } from "../lib/macros";
-import { clonePlan, cloneMeal, createItem, createMeal, createPlan, hasTarget } from "../lib/plans";
+import { buildProductMap, sumMeals } from "../lib/macros";
+import { clonePlan, cloneMeal, createItem, createMeal, createPlan } from "../lib/plans";
 import { createRecipe } from "../lib/recipes";
 import { moveInList, moveItemInMeals, nudgeInList } from "../lib/reorder";
-
-const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 
 export default function PlannerTab({
   products,
@@ -30,9 +25,7 @@ export default function PlannerTab({
   onFit
 }) {
   const { t, lang } = useI18n();
-  const [builderMealId, setBuilderMealId] = useState(null);
   const [summaryInView, setSummaryInView] = useState(false);
-  const [suggestOpen, setSuggestOpen] = useState(false);
   const [organize, setOrganize] = useState(false);
   const { plans: allPlans, activePlanId } = plannerState;
   const plans = useMemo(() => allPlans.filter(p => !p.archived), [allPlans]);
@@ -279,32 +272,9 @@ export default function PlannerTab({
   }
 
   /* ---------- plan-level tools ---------- */
-  function autoFill(macro) {
-    const result = scaleToTarget(activePlan.data, productMap, macro, profile[PROFILE_KEY[macro]]);
-    if (result.error) return notify(t(`auto.${result.error}`));
-    const before = activePlan.data;
-    updateData(() => result.data);
-    notify(t("toast.scaled", { macro: t(MACRO_LABEL_KEYS[macro]).toLowerCase(), factor: result.factor.toFixed(2) }), {
-      label: t("common.undo"),
-      run: () => restoreData(activePlan.id, before)
-    });
-  }
-
   function exportCsv(id) {
     const plan = plans.find(p => p.id === id);
     downloadFile(plansToCSV([plan], productMap), `${plan.name || "plan"}.csv`, "text/csv;charset=utf-8");
-  }
-
-  function applyBalance(action) {
-    const before = activePlan.data;
-    if (action.type === "add") {
-      mapMeal(action.mealId, m => ({ ...m, items: [...m.items, createItem(action.product.id, action.newAmount)] }));
-    } else if (action.type === "remove") {
-      removeItem(action.mealId, action.itemId);
-    } else {
-      updateItem(action.mealId, action.itemId, { amount: action.newAmount });
-    }
-    notify(t("toast.suggestionApplied"), { label: t("common.undo"), run: () => restoreData(activePlan.id, before) });
   }
 
   async function exportImage(id) {
@@ -317,33 +287,6 @@ export default function PlannerTab({
     } catch {
       notify(t("toast.imageFail"));
     }
-  }
-
-  /* ---------- smart meal builder ---------- */
-  const builderMeal = meals.find(m => m.id === builderMealId);
-
-  function builderDefaults(meal) {
-    if (hasTarget(meal.target)) return { target: meal.target, source: "meal" };
-    if (hasTarget(profile)) {
-      const left = k => (profile[k] > 0 ? Math.max(0, Math.round((profile[k] - dailyTotals[k === "calories" ? "cal" : k]) * 10) / 10) : 0);
-      return {
-        target: { calories: left("calories"), protein: left("protein"), carbs: left("carbs"), fat: left("fat") },
-        source: "remaining"
-      };
-    }
-    return { target: { calories: 0, protein: 0, carbs: 0, fat: 0 }, source: null };
-  }
-
-  function addBuilt(mealId, items, { replace }) {
-    mapMeal(mealId, m => ({
-      ...m,
-      items: [
-        ...(replace ? m.items.filter(it => it.locked) : m.items),
-        ...items.map(it => createItem(it.productId, it.amount))
-      ]
-    }));
-    notify(t("toast.builderAdded"));
-    setBuilderMealId(null);
   }
 
   async function copyText(id) {
@@ -420,7 +363,6 @@ export default function PlannerTab({
           onRemove={() => removeMeal(mi)}
           onTarget={patch => mapMeal(meal.id, m => ({ ...m, target: { ...m.target, ...patch } }))}
           onSaveRecipe={() => saveRecipe(meal)}
-          onBuild={() => setBuilderMealId(meal.id)}
           onAddRecipe={r => addRecipe(meal.id, r)}
           onCreateProduct={onCreateProduct}
         />
@@ -440,38 +382,12 @@ export default function PlannerTab({
       />
       )}
 
-      {builderMeal && (() => {
-        const d = builderDefaults(builderMeal);
-        return (
-          <MealBuilder
-            key={builderMeal.id}
-            products={products}
-            mealName={builderMeal.name}
-            defaultTarget={d.target}
-            targetSource={d.source}
-            onAdd={(items, opts) => addBuilt(builderMeal.id, items, opts)}
-            onClose={() => setBuilderMealId(null)}
-            onCreateProduct={name => {
-              setBuilderMealId(null);
-              onCreateProduct(name);
-            }}
-          />
-        );
-      })()}
-
       <SummaryCard
         id="summary-card"
         profile={profile}
         totals={dailyTotals}
         onProfile={patch => updateData(d => ({ ...d, profile: { ...d.profile, ...patch } }))}
-        onAutoFill={autoFill}
-        suggestOpen={suggestOpen}
-        onToggleSuggest={() => setSuggestOpen(o => !o)}
-      >
-        {suggestOpen && (
-          <BalancePanel planData={activePlan.data} productMap={productMap} products={products} onApply={applyBalance} />
-        )}
-      </SummaryCard>
+      />
     </div>
   );
 }

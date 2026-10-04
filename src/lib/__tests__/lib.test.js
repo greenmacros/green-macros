@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { scaleToTarget } from "../autoBalance";
 import { plansToCSV } from "../exporters";
 import { parseLabel } from "../labelParser";
 import { buildProductMap, calcMacros, sumMeals } from "../macros";
@@ -40,24 +39,6 @@ describe("normalizers", () => {
   });
 });
 
-describe("scaleToTarget", () => {
-  const data = {
-    profile: {},
-    meals: [createMeal("m", [createItem("t", 100), { ...createItem("r", 100), locked: true }])]
-  };
-  it("hits the target while leaving locked items alone", () => {
-    const { data: out } = scaleToTarget(data, map, "protein", 19);
-    const [t, r] = out.meals[0].items;
-    expect(r.amount).toBe(100);
-    expect(sumMeals(out.meals, map).protein).toBeCloseTo(19, 0);
-    expect(t.amount).toBe(200);
-  });
-  it("reports impossible targets", () => {
-    expect(scaleToTarget(data, map, "protein", 1).error).toBe("lockedExceed");
-    expect(scaleToTarget(data, map, "protein", 0).error).toBeTruthy();
-  });
-});
-
 describe("labelParser", () => {
   it("reads a US-style label, ignoring saturated fat", () => {
     const { product, missing } = parseLabel(
@@ -80,6 +61,25 @@ describe("labelParser", () => {
   });
   it("flags missing fields", () => {
     expect(parseLabel("hello").missing).toHaveLength(4);
+  });
+});
+
+describe("starter preset", () => {
+  it("builds sample plans that land on their calorie targets", async () => {
+    const { STARTER_PRODUCTS } = await import("../../data/starterProducts");
+    const { starterPlans, normalizePlanner } = await import("../plans");
+    const products = STARTER_PRODUCTS.map((p, i) => ({ ...p, id: `p${i}` }));
+    const idByName = new Map(products.map(p => [p.name, p.id]));
+    const names = { workoutDay: "W", restDay: "R", breakfast: "B", lunch: "L", postWorkout: "P", dinner: "D" };
+    const state = normalizePlanner(starterPlans(names, idByName));
+    const productMap = buildProductMap(products);
+    expect(state.plans.map(p => p.data.profile.calories)).toEqual([2000, 1800]);
+    for (const plan of state.plans) {
+      const total = sumMeals(plan.data.meals, productMap);
+      expect(Math.abs(total.cal / plan.data.profile.calories - 1)).toBeLessThan(0.05);
+      expect(Math.abs(total.protein / plan.data.profile.protein - 1)).toBeLessThan(0.1);
+    }
+    expect(state.week.filter(Boolean)).toHaveLength(7);
   });
 });
 
@@ -156,37 +156,6 @@ describe("planner migration", () => {
   });
   it("uses localized default names", () => {
     expect(normalizePlanner(null, { plan: "プラン", meal: "食事" }).plans[0].name).toBe("プラン 1");
-  });
-});
-
-describe("buildMeal (smart meal builder)", () => {
-  const prod = (id, name, cal, protein, carbs, fat, servingGrams = 100, unit = "g") => ({ id, name, cal, protein, carbs, fat, servingGrams, unit });
-  const rice2 = prod("r", "Rice", 130, 2.7, 28, 0.3);
-  const tofu2 = prod("t", "Tofu", 76, 8, 2, 5);
-  const oil = prod("o", "Oil", 884, 0, 0, 100);
-  const lentil = prod("l", "Lentils", 116, 9, 20, 0.4);
-
-  it("lands within 10% of a reachable target", async () => {
-    const { buildMeal } = await import("../mealBuilder");
-    const r = buildMeal([rice2, tofu2, lentil, oil], { calories: 0, protein: 35, carbs: 70, fat: 14 });
-    expect(r.ok).toBe(true);
-    expect(r.items.every(i => i.amount > 0)).toBe(true);
-    expect(Math.abs(r.totals.protein - 35) / 35).toBeLessThan(0.1);
-  });
-  it("reports what is short when the products can't get there", async () => {
-    const { buildMeal } = await import("../mealBuilder");
-    const r = buildMeal([rice2], { calories: 0, protein: 80, carbs: 0, fat: 0 });
-    expect(r.ok).toBe(false);
-    expect(r.short).toContain("protein");
-    expect(r.maxed).toContain("Rice");
-  });
-  it("respects unit steps and returns null with nothing to solve", async () => {
-    const { buildMeal } = await import("../mealBuilder");
-    const banana = prod("b", "Banana", 105, 1.3, 27, 0.4, 1, "unit");
-    const r = buildMeal([banana], { calories: 0, protein: 0, carbs: 54, fat: 0 });
-    expect(r.items[0].amount % 0.5).toBe(0);
-    expect(buildMeal([], { carbs: 50 })).toBeNull();
-    expect(buildMeal([banana], { calories: 0, protein: 0, carbs: 0, fat: 0 })).toBeNull();
   });
 });
 
@@ -285,38 +254,6 @@ describe("suggestSwaps (fit a product into my plan)", () => {
     expect(suggestSwaps(tofuP, [plan], pmap)).toHaveLength(0);
     expect(suggestSwaps(oil2, [plan], pmap)).toHaveLength(0);
     expect(suggestSwaps(oil2, [plan], pmap, { includeLocked: true }).every(s => s.score >= 0.4)).toBe(true);
-  });
-});
-
-describe("suggestBalance (optional)", () => {
-  const mk = (id, name, cal, protein, carbs, fat) => ({ id, name, cal, protein, carbs, fat, servingGrams: 100, unit: "g" });
-  const rice3 = mk("r", "Rice", 130, 2.7, 28, 0.3);
-  const lentil3 = mk("l", "Lentils", 116, 9, 20, 0.4);
-  const tofu3 = mk("t", "Tofu", 76, 8, 2, 5);
-  const pm = new Map([rice3, lentil3, tofu3].map(p => [p.id, p]));
-  const day = (items, profile) => ({ profile: { calories: 0, protein: 0, carbs: 0, fat: 0, ...profile }, meals: [createMeal("All", items)] });
-
-  it("needs targets, and says so when the day is already balanced", async () => {
-    const { suggestBalance } = await import("../balance");
-    expect(suggestBalance(day([createItem("r", 100)], {}), pm, [rice3]).status).toBe("noTarget");
-    const d = day([createItem("r", 100)], { carbs: 28 });
-    expect(suggestBalance(d, pm, [rice3]).status).toBe("balanced");
-  });
-  it("suggests a protein source when protein is short, and every action improves the fit", async () => {
-    const { suggestBalance } = await import("../balance");
-    const d = day([createItem("r", 200)], { protein: 40, carbs: 56 });
-    const r = suggestBalance(d, pm, [rice3, lentil3, tofu3]);
-    expect(r.status).toBe("ok");
-    const adds = r.actions.filter(a => a.type === "add");
-    expect(adds.length).toBeGreaterThan(0);
-    expect(adds[0].after.protein).toBeGreaterThan(adds[0].before.protein);
-    expect(r.actions.every(a => a.gain > 0)).toBe(true);
-  });
-  it("never touches locked items", async () => {
-    const { suggestBalance } = await import("../balance");
-    const d = day([{ ...createItem("r", 300), locked: true }], { carbs: 56 });
-    const r = suggestBalance(d, pm, []);
-    expect(r.actions.filter(a => a.itemId)).toHaveLength(0);
   });
 });
 

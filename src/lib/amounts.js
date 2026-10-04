@@ -1,6 +1,6 @@
 import { emptyTotals } from "./macros";
 
-// Shared by the meal builder, product swaps and balance suggestions.
+// Shared helpers for product swaps ("fit a product").
 export const STEP = { g: 5, ml: 5, unit: 0.5, scoop: 0.5 };
 export const WEIGHT = { protein: 1, carbs: 1, fat: 1, cal: 0.5 };
 export const MIN_SCALE = { protein: 10, carbs: 10, fat: 10, cal: 100 };
