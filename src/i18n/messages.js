@@ -42,12 +42,6 @@ export const MESSAGES = {
   "plan.default": m("Plan", "プラン"),
   "meal.default": m("Meal", "食事"),
   "plan.copyOf": m("{name} copy", "{name} のコピー"),
-  "starter.workoutDay": m("Workout Day", "トレーニング日"),
-  "starter.restDay": m("Rest Day", "休養日"),
-  "starter.breakfast": m("Breakfast", "朝食"),
-  "starter.lunch": m("Lunch", "昼食"),
-  "starter.postWorkout": m("Post Workout", "トレ後"),
-  "starter.dinner": m("Dinner", "夕食"),
 
   /* first run / share import */
   "first.title": m("Welcome to GreenMacros 🌱", "GreenMacros へようこそ 🌱"),
@@ -55,16 +49,7 @@ export const MESSAGES = {
     "GreenMacros is a flexible planning tool — not a diet prescription.",
     "GreenMacros は自由に使える計画ツールです。食事療法の指示ではありません。"
   ),
-  "first.choose": m(
-    "Start completely fresh, or load a few common plant-based foods and two empty day templates you can customize.",
-    "まっさらな状態で始めるか、よく使う植物性食品といくつかの1日テンプレートを読み込めます。"
-  ),
-  "first.fresh": m("Start fresh", "最初から始める"),
-  "first.preset": m("Load preset", "プリセットを読み込む"),
-  "first.note": m(
-    "Presets contain approximate nutrition values and no macro targets — verify against real labels.",
-    "プリセットの栄養値は目安です。目標値は含まれません。実際の表示でご確認ください。"
-  ),
+  "first.start": m("Get started", "はじめる"),
   "share.title": m("Shared plan received", "共有されたプランがあります"),
   "share.body": m(
     "This link contains {plans} plan(s) ({names}) and {products} product(s).",
@@ -118,8 +103,6 @@ export const MESSAGES = {
   "toast.clipboardFail": m("Couldn't access the clipboard", "クリップボードにアクセスできません"),
   "toast.productAdded": m("Added “{name}”", "「{name}」を追加しました"),
   "toast.productDeleted": m("Deleted “{name}”", "「{name}」を削除しました"),
-  "toast.starterAdded": m("Added {n} starter products", "{n} 件のスターター食品を追加しました"),
-  "toast.starterHave": m("Starter products are already in your list", "スターター食品はすでにリストにあります"),
   "toast.allDeleted": m("All products deleted", "すべての食品を削除しました"),
   "toast.recipeSaved": m("Saved recipe “{name}”", "レシピ「{name}」を保存しました"),
   "toast.recipeAdded": m("Added “{name}”", "「{name}」を追加しました"),
@@ -206,7 +189,6 @@ export const MESSAGES = {
   "products.title": m("Products", "食品"),
   "products.add": m("+ Add product", "＋ 食品を追加"),
   "products.hideForm": m("Hide form", "フォームを閉じる"),
-  "products.starter": m("Add starter products", "スターター食品を追加"),
   "products.deleteAll": m("Delete all", "すべて削除"),
   "products.search": m("Search {n} products…", "{n} 件の食品を検索…"),
   "products.favorites": m("Favorites", "お気に入り"),
@@ -340,7 +322,7 @@ export const MESSAGES = {
   ),
   "tour.manual.title": m("Add by hand", "手入力で追加"),
   "tour.manual.body": m(
-    "Type in a product’s name and macros yourself, or use the … menu for starter foods and duplicate cleanup.",
+    "Type in a product’s name and macros yourself, or use the … menu to find duplicates and clean up.",
     "食品名と栄養素を手入力できます。… メニューにはスターター食品や重複の整理もあります。"
   ),
   "tour.addpanel.title": m("More ways to add", "いろいろな追加方法"),

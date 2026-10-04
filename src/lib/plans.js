@@ -1,4 +1,3 @@
-import { STARTER_PLANS, STARTER_WEEK } from "../data/starterPlans";
 import { uid } from "./id";
 
 export const PLAN_COLORS = ["", "#3ddc97", "#60a5fa", "#fbbf24", "#f87171", "#c084fc", "#fb923c"];
@@ -141,28 +140,6 @@ export function normalizePlanner(state, labels = { plan: "Plan", meal: "Meal" })
     activePlanId: plans.some(p => p.id === wanted && !p.archived) ? wanted : plans.find(p => !p.archived).id,
     week
   };
-}
-
-/**
- * Sample plans with targets and meals filled in. `names` supplies the (translated) labels and
- * `idByName` maps each STARTER_PRODUCTS English name to the id of the created product.
- * Returns { plans, week } ready for normalizePlanner.
- */
-export function starterPlans(names, idByName) {
-  const plans = STARTER_PLANS.map(spec =>
-    createPlan(names[spec.key], {
-      profile: spec.target,
-      meals: spec.meals.map(meal =>
-        createMeal(
-          names[meal.key],
-          meal.items.map(([name, amount]) => createItem(idByName.get(name), amount))
-        )
-      )
-    })
-  );
-  plans.forEach((p, i) => (p.color = STARTER_PLANS[i].color));
-  const idByKey = new Map(STARTER_PLANS.map((spec, i) => [spec.key, plans[i].id]));
-  return { plans, week: STARTER_WEEK.map(key => idByKey.get(key)) };
 }
 
 /** Product ids referenced by a plan. */

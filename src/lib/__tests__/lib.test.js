@@ -64,25 +64,6 @@ describe("labelParser", () => {
   });
 });
 
-describe("starter preset", () => {
-  it("builds sample plans that land on their calorie targets", async () => {
-    const { STARTER_PRODUCTS } = await import("../../data/starterProducts");
-    const { starterPlans, normalizePlanner } = await import("../plans");
-    const products = STARTER_PRODUCTS.map((p, i) => ({ ...p, id: `p${i}` }));
-    const idByName = new Map(products.map(p => [p.name, p.id]));
-    const names = { workoutDay: "W", restDay: "R", breakfast: "B", lunch: "L", postWorkout: "P", dinner: "D" };
-    const state = normalizePlanner(starterPlans(names, idByName));
-    const productMap = buildProductMap(products);
-    expect(state.plans.map(p => p.data.profile.calories)).toEqual([2000, 1800]);
-    for (const plan of state.plans) {
-      const total = sumMeals(plan.data.meals, productMap);
-      expect(Math.abs(total.cal / plan.data.profile.calories - 1)).toBeLessThan(0.05);
-      expect(Math.abs(total.protein / plan.data.profile.protein - 1)).toBeLessThan(0.1);
-    }
-    expect(state.week.filter(Boolean)).toHaveLength(7);
-  });
-});
-
 describe("mergeShared", () => {
   it("re-ids clashing products and re-points imported items", () => {
     const mine = createPlan("Mine");

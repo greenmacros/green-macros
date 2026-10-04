@@ -7,7 +7,6 @@ import ProductForm from "../components/ProductForm";
 import AddPanel from "./AddPanel";
 import DuplicatesDialog from "./DuplicatesDialog";
 import ProductRow from "./ProductRow";
-import { starterProducts } from "../data/starterProducts";
 import { useI18n } from "../i18n/context";
 import { CATEGORIES } from "../lib/categories";
 import { fold } from "../lib/foods";
@@ -23,7 +22,7 @@ const PAGE = 25;
 export default function ProductsTab({
   products, setProducts, recipes, setRecipes, usage, prefill, onPrefillUsed, onFit, onMerge, notify
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [showForm, setShowForm] = useState(prefill != null);
   const [formKey, setFormKey] = useState(0);
   const [formInitial] = useState(() => (prefill ? { name: prefill } : undefined));
@@ -132,14 +131,6 @@ export default function ProductsTab({
     });
   }
 
-  function loadStarter() {
-    const have = new Set(products.map(p => fold(p.name)));
-    const fresh = starterProducts(lang).filter(p => !have.has(fold(p.name))).map(p => createProduct(p));
-    if (!fresh.length) return notify(t("toast.starterHave"));
-    addMany(fresh);
-    notify(t("toast.starterAdded", { n: fresh.length }));
-  }
-
   function clearAll() {
     if (!products.length) return;
     if (!window.confirm(t("products.confirmAll", { n: products.length }))) return;
@@ -245,8 +236,6 @@ export default function ProductsTab({
             {showForm ? t("products.hideForm") : t("products.add")}
           </button>
           <Menu title={t("products.more")}>
-            <button onClick={loadStarter}>{t("products.starter")}</button>
-            <hr />
             <button disabled={products.length < 2} onClick={() => setShowDups(true)}>{t("products.findDuplicates")}</button>
             <button disabled={!products.length} onClick={selectUnused}>{t("products.selectUnused")}</button>
             <hr />
@@ -374,9 +363,6 @@ export default function ProductsTab({
         {!sorted.length && (
           <div className="muted empty-row">
             {products.length ? t("products.noMatch") : t("products.empty")}
-            {!products.length && (
-              <div><button className="primary-btn" onClick={loadStarter}>{t("products.starter")}</button></div>
-            )}
           </div>
         )}
       </div>

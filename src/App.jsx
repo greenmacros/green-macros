@@ -20,13 +20,12 @@ import {
 } from "./lib/persistence";
 import { useTheme } from "./theme/useTheme";
 import { buildProductMap } from "./lib/macros";
-import { STARTER_PRODUCTS, starterProducts } from "./data/starterProducts";
 import { useI18n } from "./i18n/context";
 import { MESSAGES } from "./i18n/messages";
 import { backupFilename, buildBackup, formatDateTime, parseBackup } from "./lib/backup";
 import { copyToClipboard, downloadJSON, readJSONFile } from "./lib/exporters";
-import { normalizePlanner, starterPlans } from "./lib/plans";
-import { createProduct, normalizeProducts } from "./lib/products";
+import { normalizePlanner } from "./lib/plans";
+import { normalizeProducts } from "./lib/products";
 import { normalizeRecipes } from "./lib/recipes";
 import { buildShareUrl, mergeShared, parseShare } from "./lib/share";
 import { STORAGE_KEYS, loadJSON, loadString, saveJSON, saveString } from "./lib/storage";
@@ -278,31 +277,10 @@ export default function App() {
   }
 
   /* ---------- first run ---------- */
-  function finishFirstRun(preset) {
-    if (!preset && isUntouchedDefault(plannerState)) {
+  function finishFirstRun() {
+    if (isUntouchedDefault(plannerState)) {
       // the default plan/meal were named in whichever language loaded first; rename for the chosen one
       setPlannerState(normalizePlanner(null, labels));
-    }
-    if (preset) {
-      const created = starterProducts(lang).map(p => createProduct(p));
-      const idByName = new Map(STARTER_PRODUCTS.map((p, i) => [p.name, created[i].id]));
-      setProducts(created);
-      setPlannerState(
-        normalizePlanner(
-          starterPlans(
-            {
-              workoutDay: t("starter.workoutDay"),
-              restDay: t("starter.restDay"),
-              breakfast: t("starter.breakfast"),
-              lunch: t("starter.lunch"),
-              postWorkout: t("starter.postWorkout"),
-              dinner: t("starter.dinner")
-            },
-            idByName
-          ),
-          labels
-        )
-      );
     }
     saveString(STORAGE_KEYS.visited, "1");
     setVisited(true);
@@ -401,7 +379,7 @@ export default function App() {
         />
       )}
       {!visited && !pendingShare && (
-        <FirstRunModal onFresh={() => finishFirstRun(false)} onPreset={() => finishFirstRun(true)} />
+        <FirstRunModal onStart={finishFirstRun} />
       )}
 
       {tourOpen && <Tour steps={TOUR_STEPS} tab={tab} onTab={setTab} onClose={() => setTourOpen(false)} />}
