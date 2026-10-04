@@ -22,6 +22,7 @@ import { useTheme } from "./theme/useTheme";
 import { buildProductMap } from "./lib/macros";
 import { starterProducts } from "./data/starterProducts";
 import { useI18n } from "./i18n/context";
+import { MESSAGES } from "./i18n/messages";
 import { backupFilename, buildBackup, formatDateTime, parseBackup } from "./lib/backup";
 import { copyToClipboard, downloadJSON, readJSONFile } from "./lib/exporters";
 import { normalizePlanner, starterPlans } from "./lib/plans";
@@ -46,6 +47,18 @@ const TOUR_STEPS = [
   { id: "share", target: ".share-anchor" },
   { id: "settings", target: ".settings-anchor" }
 ].map(s => ({ ...s, title: `tour.${s.id}.title`, body: `tour.${s.id}.body` }));
+
+/** A single empty plan/meal still carrying a generated default name ("Plan 1" / "プラン 1"). */
+function isUntouchedDefault({ plans }) {
+  const isDefault = (name, key) => Object.values(MESSAGES[key]).some(base => name === `${base} 1`);
+  return (
+    plans.length === 1 &&
+    isDefault(plans[0].name, "plan.default") &&
+    plans[0].data.meals.length === 1 &&
+    isDefault(plans[0].data.meals[0].name, "meal.default") &&
+    plans[0].data.meals[0].items.length === 0
+  );
+}
 
 function readShareFromUrl() {
   const s = new URLSearchParams(window.location.search).get("s");
@@ -266,6 +279,10 @@ export default function App() {
 
   /* ---------- first run ---------- */
   function finishFirstRun(preset) {
+    if (!preset && isUntouchedDefault(plannerState)) {
+      // the default plan/meal were named in whichever language loaded first; rename for the chosen one
+      setPlannerState(normalizePlanner(null, labels));
+    }
     if (preset) {
       setProducts(starterProducts(lang).map(p => createProduct(p)));
       setPlannerState(
