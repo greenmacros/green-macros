@@ -14,7 +14,7 @@ import { STORAGE_KEYS, loadString, saveString } from "../lib/storage";
 const SORTS = ["name", "recent", "protein", "carbs", "fat", "cal"];
 
 export default function ProductsTab({
-  products, setProducts, recipes, setRecipes, usage, prefill, onPrefillUsed, notify
+  products, setProducts, recipes, setRecipes, usage, prefill, onPrefillUsed, onFit, notify
 }) {
   const { t, lang } = useI18n();
   const [showForm, setShowForm] = useState(prefill != null);
@@ -195,6 +195,7 @@ export default function ProductsTab({
                 <NumInput aria-label={t("macro.fat")} value={p.fat} onCommit={v => update(p.id, { fat: v })} />
               </div>
               <div className="row-actions">
+                <button className="icon-btn row-action" title={t("fit.rowHint")} aria-label={t("fit.rowHint")} onClick={() => onFit(p)}><Icon name="swap" /></button>
                 <button className="icon-btn row-action" title={t("common.duplicate")} aria-label={t("common.duplicate")} onClick={() => duplicateProduct(p)}><Icon name="copy" /></button>
                 <button className="icon-btn row-action remove" title={t("common.delete")} aria-label={t("common.delete")} onClick={() => removeProduct(p)}><Icon name="close" /></button>
               </div>

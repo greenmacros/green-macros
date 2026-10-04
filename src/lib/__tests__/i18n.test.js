@@ -23,6 +23,7 @@ const dynamic = [
   ...["products", "plans", "all"].map(i => `kind.${i}`),
   ...["name", "recent", "protein", "carbs", "fat", "cal"].map(i => `sort.${i}`),
   ...["meal", "remaining", "none"].map(i => `builder.source.${i}`),
+  ...["great", "good", "rough", "poor"].map(i => `fit.${i}`),
   ...["noTarget", "noContribution", "lockedExceed"].map(i => `auto.${i}`),
   ...["cal", "p", "c", "f", "calories", "protein", "carbs", "fat"].map(i => `macro.${i}`)
 ];

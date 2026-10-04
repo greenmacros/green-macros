@@ -226,3 +226,88 @@ describe("archived plans", () => {
     expect(s.plans.find(p => p.id === s.activePlanId).archived).toBe(false);
   });
 });
+
+describe("full backup with dates", () => {
+  const state = () => ({ products: [rice], plannerState: normalizePlanner({ plans: [{ id: "p", name: "A", data: {} }] }), recipes: [] });
+
+  it("stamps the file and round-trips", async () => {
+    const { buildBackup, parseBackup } = await import("../backup");
+    const file = buildBackup(state(), new Date("2026-10-04T12:34:56Z"));
+    expect(file).toMatchObject({ app: "GreenMacros", version: 2, exportedAt: "2026-10-04T12:34:56.000Z", counts: { plans: 1, products: 1, recipes: 0 } });
+    const back = parseBackup(JSON.parse(JSON.stringify(file)));
+    expect(back.exportedAt).toBe(Date.parse("2026-10-04T12:34:56Z"));
+    expect(back.products[0].name).toBe("Rice");
+    expect(back.counts.plans).toBe(1);
+  });
+  it("still reads old backups without a date", async () => {
+    const { parseBackup } = await import("../backup");
+    const old = { products: [rice], plannerState: { plans: [{ id: 1, name: "Old", data: {} }] } };
+    const back = parseBackup(old);
+    expect(back.exportedAt).toBeNull();
+    expect(back.recipes).toEqual([]);
+  });
+  it("rejects files that aren't backups and names files by local date", async () => {
+    const { parseBackup, backupFilename } = await import("../backup");
+    expect(() => parseBackup({ foo: 1 })).toThrow();
+    expect(backupFilename("green-macros-backup", new Date(2026, 9, 4))).toBe("green-macros-backup-2026-10-04.json");
+  });
+});
+
+describe("suggestSwaps (fit a product into my plan)", () => {
+  const mk = (id, name, cal, protein, carbs, fat, servingGrams = 100, unit = "g") => ({ id, name, cal, protein, carbs, fat, servingGrams, unit });
+  const tofuP = mk("t", "Tofu", 76, 8, 2, 5);
+  const riceP = mk("r", "Rice", 130, 2.7, 28, 0.3);
+  const planOf = items => ({ id: "p", name: "Day", data: { profile: {}, meals: [createMeal("Lunch", items)] } });
+  const pmap = new Map([tofuP, riceP].map(p => [p.id, p]));
+
+  it("ranks the like-for-like swap first and sizes the amount to match macros", async () => {
+    const { suggestSwaps } = await import("../substitute");
+    const tempeh = mk("x", "Tempeh", 190, 20, 9, 11);
+    const plan = planOf([createItem("t", 200), createItem("r", 150)]);
+    const swaps = suggestSwaps(tempeh, [plan], pmap);
+    expect(swaps[0].oldProduct.name).toBe("Tofu");
+    expect(swaps[0].level).not.toBe("poor");
+    expect(Math.abs(swaps[0].newMacros.protein - swaps[0].oldMacros.protein)).toBeLessThan(6);
+    expect(swaps.length === 1 || swaps[0].score > swaps[1].score).toBe(true);
+  });
+  it("skips locked items, the same product, and hopeless swaps", async () => {
+    const { suggestSwaps } = await import("../substitute");
+    const oil2 = mk("o", "Oil", 884, 0, 0, 100);
+    const plan = planOf([{ ...createItem("t", 200), locked: true }, createItem("r", 150)]);
+    expect(suggestSwaps(tofuP, [plan], pmap)).toHaveLength(0);
+    expect(suggestSwaps(oil2, [plan], pmap)).toHaveLength(0);
+    expect(suggestSwaps(oil2, [plan], pmap, { includeLocked: true }).every(s => s.score >= 0.4)).toBe(true);
+  });
+});
+
+describe("suggestBalance (optional)", () => {
+  const mk = (id, name, cal, protein, carbs, fat) => ({ id, name, cal, protein, carbs, fat, servingGrams: 100, unit: "g" });
+  const rice3 = mk("r", "Rice", 130, 2.7, 28, 0.3);
+  const lentil3 = mk("l", "Lentils", 116, 9, 20, 0.4);
+  const tofu3 = mk("t", "Tofu", 76, 8, 2, 5);
+  const pm = new Map([rice3, lentil3, tofu3].map(p => [p.id, p]));
+  const day = (items, profile) => ({ profile: { calories: 0, protein: 0, carbs: 0, fat: 0, ...profile }, meals: [createMeal("All", items)] });
+
+  it("needs targets, and says so when the day is already balanced", async () => {
+    const { suggestBalance } = await import("../balance");
+    expect(suggestBalance(day([createItem("r", 100)], {}), pm, [rice3]).status).toBe("noTarget");
+    const d = day([createItem("r", 100)], { carbs: 28 });
+    expect(suggestBalance(d, pm, [rice3]).status).toBe("balanced");
+  });
+  it("suggests a protein source when protein is short, and every action improves the fit", async () => {
+    const { suggestBalance } = await import("../balance");
+    const d = day([createItem("r", 200)], { protein: 40, carbs: 56 });
+    const r = suggestBalance(d, pm, [rice3, lentil3, tofu3]);
+    expect(r.status).toBe("ok");
+    const adds = r.actions.filter(a => a.type === "add");
+    expect(adds.length).toBeGreaterThan(0);
+    expect(adds[0].after.protein).toBeGreaterThan(adds[0].before.protein);
+    expect(r.actions.every(a => a.gain > 0)).toBe(true);
+  });
+  it("never touches locked items", async () => {
+    const { suggestBalance } = await import("../balance");
+    const d = day([{ ...createItem("r", 300), locked: true }], { carbs: 56 });
+    const r = suggestBalance(d, pm, []);
+    expect(r.actions.filter(a => a.itemId)).toHaveLength(0);
+  });
+});

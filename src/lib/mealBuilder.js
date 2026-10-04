@@ -1,3 +1,4 @@
+import { MIN_SCALE, PROFILE_KEY, WEIGHT, stepFor } from "./amounts";
 import { sumItems } from "./macros";
 
 /*
@@ -12,18 +13,9 @@ import { sumItems } from "./macros";
   Amounts are then rounded to practical steps and polished with a few greedy passes.
 */
 
-const STEP = { g: 5, ml: 5, unit: 0.5, scoop: 0.5 };
-const WEIGHT = { protein: 1, carbs: 1, fat: 1, cal: 0.5 };
-const MIN_SCALE = { protein: 10, carbs: 10, fat: 10, cal: 100 };
 const KEYS = ["protein", "carbs", "fat", "cal"];
-const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 const LAMBDA = 0.002;
 export const OK_TOLERANCE = 0.1;
-
-function stepFor(p, amount) {
-  if (p.unit === "g" || p.unit === "ml") return amount < 40 ? 1 : STEP[p.unit];
-  return STEP[p.unit] ?? 1;
-}
 
 const roundStep = (v, step) => Math.round(v / step) * step;
 

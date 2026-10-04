@@ -6,7 +6,7 @@ import { hasTarget } from "../lib/plans";
 
 const PROFILE_KEY = { cal: "calories", protein: "protein", carbs: "carbs", fat: "fat" };
 
-export default function SummaryCard({ id, profile, totals, onProfile, onAutoFill }) {
+export default function SummaryCard({ id, profile, totals, onProfile, onAutoFill, suggestOpen, onToggleSuggest, children }) {
   const { t } = useI18n();
   const [macro, setMacro] = useState("protein");
 
@@ -74,7 +74,11 @@ export default function SummaryCard({ id, profile, totals, onProfile, onAutoFill
           {t("summary.scale")}
         </button>
         <span className="hint">{t("summary.lockedStay")}</span>
+        <button className="btn-ghost suggest-toggle" aria-expanded={suggestOpen} onClick={onToggleSuggest}>
+          {suggestOpen ? t("balance.hide") : t("balance.show")}
+        </button>
       </div>
+      {children}
     </section>
   );
 }

@@ -828,3 +828,27 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .plan-switcher-item.archived { color: var(--muted); cursor: default; }
 .plan-switcher-item.archived:hover { background: transparent; }
 .plan-switcher-item.archived .btn-ghost { font-size: 13px; padding: 2px 8px; }
+
+/* ==============================
+   Fit a product / balance suggestions
+============================== */
+.fit-candidate { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; }
+.field-inline { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.swap-list { display: flex; flex-direction: column; margin-top: 8px; }
+.swap-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px 14px; padding: 10px 0; border-top: 1px solid var(--line); }
+.swap-main { min-width: 0; font-size: 14px; }
+.swap-delta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.swap-delta b { color: var(--text); }
+.fit-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+.fit-badge.great { background: var(--mint-soft); color: var(--ok); }
+.fit-badge.good { background: var(--mint-soft); color: var(--mint); }
+.fit-badge.rough { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.balance-panel { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.suggest-toggle { margin-left: auto; font-size: 13px; }
+@media (max-width: 760px) {
+  .swap-row { grid-template-columns: 1fr auto; }
+  .swap-row .fit-badge { grid-column: 1; justify-self: start; }
+  .swap-row button { grid-column: 2; grid-row: 1 / span 2; }
+  .fit-candidate { flex-direction: column; align-items: flex-start; }
+}
+.builder-tools .toolbar-check { white-space: nowrap; }

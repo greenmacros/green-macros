@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import BalancePanel from "./BalancePanel";
 import MealBuilder from "./MealBuilder";
 import MealCard from "./MealCard";
 import PlanTabs from "./PlanTabs";
@@ -23,11 +24,13 @@ export default function PlannerTab({
   notify,
   onCreateProduct,
   onSharePlan,
-  onPrint
+  onPrint,
+  onFit
 }) {
   const { t, lang } = useI18n();
   const [builderMealId, setBuilderMealId] = useState(null);
   const [summaryInView, setSummaryInView] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const { plans: allPlans, activePlanId } = plannerState;
   const plans = useMemo(() => allPlans.filter(p => !p.archived), [allPlans]);
   const archivedPlans = useMemo(() => allPlans.filter(p => p.archived), [allPlans]);
@@ -284,6 +287,18 @@ export default function PlannerTab({
     downloadFile(plansToCSV([plan], productMap), `${plan.name || "plan"}.csv`, "text/csv;charset=utf-8");
   }
 
+  function applyBalance(action) {
+    const before = activePlan.data;
+    if (action.type === "add") {
+      mapMeal(action.mealId, m => ({ ...m, items: [...m.items, createItem(action.product.id, action.newAmount)] }));
+    } else if (action.type === "remove") {
+      removeItem(action.mealId, action.itemId);
+    } else {
+      updateItem(action.mealId, action.itemId, { amount: action.newAmount });
+    }
+    notify(t("toast.suggestionApplied"), { label: t("common.undo"), run: () => restoreData(activePlan.id, before) });
+  }
+
   async function exportImage(id) {
     const plan = plans.find(p => p.id === id);
     try {
@@ -353,6 +368,7 @@ export default function PlannerTab({
         onShare={onSharePlan}
         onPrint={id => onPrint({ kind: "plan", id })}
         onImage={exportImage}
+        onFit={() => onFit(null)}
       />
 
       {products.length === 0 && (
@@ -422,7 +438,13 @@ export default function PlannerTab({
         totals={dailyTotals}
         onProfile={patch => updateData(d => ({ ...d, profile: { ...d.profile, ...patch } }))}
         onAutoFill={autoFill}
-      />
+        suggestOpen={suggestOpen}
+        onToggleSuggest={() => setSuggestOpen(o => !o)}
+      >
+        {suggestOpen && (
+          <BalancePanel planData={activePlan.data} productMap={productMap} products={products} onApply={applyBalance} />
+        )}
+      </SummaryCard>
     </div>
   );
 }

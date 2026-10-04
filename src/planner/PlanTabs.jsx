@@ -30,7 +30,8 @@ export default function PlanTabs({
   onCopyText,
   onShare,
   onPrint,
-  onImage
+  onImage,
+  onFit
 }) {
   const { t } = useI18n();
   const [editingId, setEditingId] = useState(null);
@@ -158,6 +159,8 @@ export default function PlanTabs({
               />
             ))}
           </div>
+          <hr />
+          <button onClick={onFit}>{t("fit.menu")}</button>
           <hr />
           <button onClick={() => onShare(active.id)}>{t("plans.shareThis")}</button>
           <button onClick={() => onImage(active.id)}>{t("plans.image")}</button>

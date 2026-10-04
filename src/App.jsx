@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import Menu from "./components/Menu";
 import ShareImportModal from "./components/ShareImportModal";
 import Toast from "./components/Toast";
+import FitProduct from "./planner/FitProduct";
 import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
 import WeekTab from "./week/WeekTab";
@@ -17,6 +18,7 @@ import { useTheme } from "./theme/useTheme";
 import { buildProductMap } from "./lib/macros";
 import { starterProducts } from "./data/starterProducts";
 import { useI18n } from "./i18n/context";
+import { backupFilename, buildBackup, formatDateTime, parseBackup } from "./lib/backup";
 import { copyToClipboard, downloadJSON, readJSONFile } from "./lib/exporters";
 import { normalizePlanner, starterPlans } from "./lib/plans";
 import { createProduct, normalizeProducts } from "./lib/products";
@@ -62,6 +64,7 @@ export default function App() {
   const [installEvent, setInstallEvent] = useState(null);
   const { theme, toggle: toggleTheme } = useTheme();
   const [printJob, setPrintJob] = useState(null);
+  const [fitDialog, setFitDialog] = useState(null); // null | { product }
   const [lastBackup, setLastBackup] = useState(getLastBackup);
   const [dismissed, setDismissed] = useState(getDismissed);
   const [firstUse] = useState(() => getFirstUse());
@@ -123,7 +126,7 @@ export default function App() {
   }
 
   function fullBackup() {
-    downloadJSON({ products, plannerState, recipes }, "green-macros-backup.json");
+    downloadJSON(buildBackup({ products, plannerState, recipes }), backupFilename());
     setLastBackup(markBackup());
   }
 
@@ -179,6 +182,43 @@ export default function App() {
       activePlanId: id
     }));
     setTab("planner");
+  }
+
+  /* ---------- fit a product into the plan ---------- */
+  function applySwap(candidate, swap) {
+    const prev = { products, plannerState };
+    if (!products.some(p => p.id === candidate.id)) setProducts(ps => [...ps, candidate]);
+    setPlannerState(s => ({
+      ...s,
+      plans: s.plans.map(plan =>
+        plan.id !== swap.planId
+          ? plan
+          : {
+              ...plan,
+              data: {
+                ...plan.data,
+                meals: plan.data.meals.map(meal =>
+                  meal.id !== swap.mealId
+                    ? meal
+                    : {
+                        ...meal,
+                        items: meal.items.map(it =>
+                          it.id === swap.itemId ? { ...it, productId: candidate.id, amount: swap.newAmount } : it
+                        )
+                      }
+                )
+              }
+            }
+      )
+    }));
+    setFitDialog(null);
+    notify(t("toast.swapped", { from: swap.oldProduct.name, to: candidate.name }), {
+      label: t("common.undo"),
+      run: () => {
+        setProducts(prev.products);
+        setPlannerState(prev.plannerState);
+      }
+    });
   }
 
   /* ---------- first run ---------- */
@@ -267,11 +307,13 @@ export default function App() {
         setPlannerState(normalizePlanner(data, labels));
         notify(t("toast.importedPlans"), undo);
       } else {
-        if (!Array.isArray(data?.products) || !Array.isArray(data?.plannerState?.plans)) throw new Error();
-        setProducts(normalizeProducts(data.products));
-        setPlannerState(normalizePlanner(data.plannerState, labels));
-        setRecipes(normalizeRecipes(data.recipes));
-        notify(t("toast.restored"), undo);
+        const backup = parseBackup(data, labels);
+        const when = backup.exportedAt ? formatDateTime(backup.exportedAt, lang) : t("backup.unknownDate");
+        if (!window.confirm(t("backup.confirm", { when, ...backup.counts }))) return;
+        setProducts(backup.products);
+        setPlannerState(backup.plannerState);
+        setRecipes(backup.recipes);
+        notify(t("toast.restoredFrom", { when }), undo);
       }
     } catch {
       notify(t("toast.badFile", { kind: t(`kind.${kind}`) }));
@@ -333,11 +375,13 @@ export default function App() {
               {theme === "light" ? t("theme.toDark") : t("theme.toLight")}
             </button>
             <hr />
-            <button onClick={() => downloadJSON(products, "products.json")}>{t("backup.exportProducts")}</button>
-            <button onClick={() => downloadJSON(plannerState, "plans.json")}>{t("backup.exportPlans")}</button>
+            <button onClick={() => downloadJSON(products, backupFilename("products"))}>{t("backup.exportProducts")}</button>
+            <button onClick={() => downloadJSON(plannerState, backupFilename("plans"))}>{t("backup.exportPlans")}</button>
             <button onClick={fullBackup}>{t("backup.exportAll")}</button>
             <div className="menu-note">
-              {lastBackup ? t("backup.last", { n: daysSince(lastBackup) }) : t("backup.lastNever")}
+              {lastBackup
+                ? t("backup.last", { when: formatDateTime(lastBackup, lang), n: daysSince(lastBackup) })
+                : t("backup.lastNever")}
             </div>
             <hr />
             <button onClick={() => pickFile("products")}>{t("backup.importProducts")}</button>
@@ -397,6 +441,7 @@ export default function App() {
           onCreateProduct={createProductFor}
           onSharePlan={id => copyShareLink(plannerState.plans.filter(p => p.id === id))}
           onPrint={setPrintJob}
+          onFit={product => setFitDialog({ product })}
         />
       )}
       {tab === "week" && (
@@ -417,7 +462,17 @@ export default function App() {
           usage={usage}
           prefill={productDraft}
           onPrefillUsed={clearDraft}
+          onFit={product => setFitDialog({ product })}
           notify={notify}
+        />
+      )}
+      {fitDialog && (
+        <FitProduct
+          products={products}
+          plannerState={plannerState}
+          initialProduct={fitDialog.product}
+          onApply={applySwap}
+          onClose={() => setFitDialog(null)}
         />
       )}
       <Footer />

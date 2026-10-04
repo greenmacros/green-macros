@@ -3,7 +3,7 @@ import ProductForm from "../components/ProductForm";
 import { useI18n } from "../i18n/context";
 import { parseLabel } from "../lib/labelParser";
 
-export default function LabelImport({ existingNames, onAdd }) {
+export default function LabelImport({ existingNames, onAdd, submitLabel }) {
   const { t } = useI18n();
   const [text, setText] = useState("");
   const [parsed, setParsed] = useState(null);
@@ -35,6 +35,7 @@ export default function LabelImport({ existingNames, onAdd }) {
           <ProductForm
             key={text}
             initial={parsed.product}
+            submitLabel={submitLabel}
             existingNames={existingNames}
             onSubmit={p => {
               onAdd(p);

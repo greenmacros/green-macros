@@ -110,7 +110,6 @@ export const MESSAGES = {
   "toast.sharedReplaced": m("Replaced with shared plans", "共有プランに置き換えました"),
   "toast.importedProducts": m("Imported {n} products", "{n} 件の食品を読み込みました"),
   "toast.importedPlans": m("Plans imported", "プランを読み込みました"),
-  "toast.restored": m("Backup restored", "バックアップを復元しました"),
   "toast.badFile": m("That doesn't look like a valid {kind} file", "有効な{kind}ファイルではありません"),
   "toast.planDeleted": m("Deleted “{name}”", "「{name}」を削除しました"),
   "toast.mealRemoved": m("Removed “{name}”", "「{name}」を削除しました"),
@@ -384,7 +383,7 @@ export const MESSAGES = {
   ),
   "notice.backupNow": m("Back up now", "今すぐバックアップ"),
   "notice.backedUp": m("Backup downloaded — keep the file somewhere safe", "バックアップをダウンロードしました。ファイルを安全な場所に保管してください"),
-  "backup.last": m("Last full backup: {n} day(s) ago", "最後の完全バックアップ：{n} 日前"),
+  "backup.last": m("Last full backup: {when} ({n} d ago)", "最後の完全バックアップ：{when}（{n}日前）"),
   "backup.lastNever": m("No full backup yet", "完全バックアップはまだありません"),
   /* settings & panels */
   "settings.title": m("Settings", "設定"),
@@ -402,5 +401,65 @@ export const MESSAGES = {
   "plans.restore": m("Restore", "復元"),
   "toast.planArchived": m("Archived “{name}”", "「{name}」をアーカイブしました"),
   "toast.planRestored": m("Restored “{name}”", "「{name}」を復元しました"),
-  "week.archivedSuffix": m("(archived)", "（アーカイブ済み）")
+  "week.archivedSuffix": m("(archived)", "（アーカイブ済み）"),
+  "backup.unknownDate": m("an unknown date", "日付不明"),
+  "backup.confirm": m(
+    "This backup was saved on {when} and contains {plans} plan(s), {products} product(s) and {recipes} recipe(s).\n\nReplace your current data with it? (You can undo right after.)",
+    "このバックアップは {when} に保存されたもので、プラン {plans} 件・食品 {products} 件・レシピ {recipes} 件が含まれます。\n\n現在のデータを置き換えますか？（直後なら元に戻せます）"
+  ),
+  "toast.restoredFrom": m("Restored backup from {when}", "{when} のバックアップを復元しました"),
+  /* fit a product into the plan */
+  "fit.menu": m("Fit a product into this plan…", "商品をプランに組み込む…"),
+  "fit.rowHint": m("Where could this fit in my plan?", "このプランのどこに入れられる？"),
+  "fit.title": m("Fit a product into my plan", "商品をプランに組み込む"),
+  "fit.intro": m(
+    "Found something new? Choose it and GreenMacros shows what in your plan it could replace, and how much to use to keep the macros about the same.",
+    "新しい商品を見つけたら、それを選ぶと、プランのどの食品と置き換えられるか、栄養素をほぼ同じに保つ量とともに表示します。"
+  ),
+  "fit.macroOnly": m(
+    "Matches are based on calories and macros only — not taste, texture, allergens, ingredients or micronutrients.",
+    "一致度はカロリーと三大栄養素のみで判断します。味・食感・アレルゲン・原材料・微量栄養素は考慮しません。"
+  ),
+  "fit.product": m("The product", "商品"),
+  "fit.srcMine": m("My products", "登録済み"),
+  "fit.srcManual": m("Enter manually", "手入力"),
+  "fit.pickMine": m("Choose one of my products…", "登録済みの食品から選ぶ…"),
+  "fit.use": m("Use this", "これを使う"),
+  "fit.per": m("per {amount} {unit}", "{amount} {unit} あたり"),
+  "fit.change": m("Change", "変更"),
+  "fit.notSaved": m("Not in your product list yet — it's added when you swap.", "まだ食品リストにありません。置き換えると自動で追加されます。"),
+  "fit.results": m("What it could replace", "置き換えられる食品"),
+  "fit.lookIn": m("Look in", "対象"),
+  "fit.allPlans": m("All plans", "すべてのプラン"),
+  "fit.includeLocked": m("Include locked items", "固定した食品も含める"),
+  "fit.none": m(
+    "Nothing in this plan has a similar enough profile. Try another plan, include locked items, or add it as a new item instead.",
+    "栄養バランスが近い食品が見つかりません。別のプランを選ぶか、固定した食品を含めるか、新しい食品として追加してください。"
+  ),
+  "fit.great": m("Great fit", "とても近い"),
+  "fit.good": m("Good fit", "近い"),
+  "fit.rough": m("Rough fit", "やや近い"),
+  "fit.poor": m("Poor fit", "遠い"),
+  "fit.swap": m("Swap", "置き換える"),
+  "toast.swapped": m("Swapped {from} for {to}", "{from} を {to} に置き換えました"),
+
+  /* optional balance suggestions */
+  "balance.show": m("Suggest ways to balance (optional)", "バランス調整の提案を見る（任意）"),
+  "balance.hide": m("Hide suggestions", "提案を閉じる"),
+  "balance.optional": m(
+    "Optional. Nothing changes unless you press Apply, and you can undo.",
+    "任意の機能です。「適用」を押さない限り何も変更されず、元に戻すこともできます。"
+  ),
+  "balance.noTarget": m("Set at least one target above to get suggestions.", "提案を表示するには、上で目標を1つ以上設定してください。"),
+  "balance.balanced": m("Already within 5% of every target — nothing to fix.", "すべての目標の±5%以内です。調整は不要です。"),
+  "balance.none": m(
+    "No simple edit gets you meaningfully closer. Try “Build from products” on a meal.",
+    "簡単な変更では目標に近づけません。食事の「食品から食事を作る」をお試しください。"
+  ),
+  "balance.addTo": m("Add new items to", "追加先の食事"),
+  "balance.add": m("Add {name} {amount} to {meal}", "{meal} に {name} を {amount} 追加"),
+  "balance.scale": m("Change {name}: {from} → {to}", "{name} の量を変更：{from} → {to}"),
+  "balance.remove": m("Remove {name} ({amount}) from {meal}", "{meal} から {name}（{amount}）を外す"),
+  "balance.apply": m("Apply", "適用"),
+  "toast.suggestionApplied": m("Suggestion applied", "提案を適用しました")
 };
