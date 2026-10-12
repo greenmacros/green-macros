@@ -1,14 +1,12 @@
+import { dayKey, normalizeLog } from "./log";
 import { normalizePlanner } from "./plans";
 import { normalizeProducts } from "./products";
 import { normalizeRecipes } from "./recipes";
 
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 /** Local calendar date as YYYY-MM-DD (for file names). */
-export function isoDay(date = new Date()) {
-  const p = n => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
-}
+export const isoDay = dayKey;
 
 /** Local time as HHMMSS (for file names). */
 export function isoTime(date = new Date()) {
@@ -23,7 +21,7 @@ export function formatDateTime(time, lang) {
 }
 
 /** The file written by "Export full backup". */
-export function buildBackup({ products, plannerState, recipes }, now = new Date()) {
+export function buildBackup({ products, plannerState, recipes, log }, now = new Date()) {
   return {
     app: "GreenMacros",
     version: BACKUP_VERSION,
@@ -31,11 +29,13 @@ export function buildBackup({ products, plannerState, recipes }, now = new Date(
     counts: {
       plans: plannerState.plans.length,
       products: products.length,
-      recipes: recipes.length
+      recipes: recipes.length,
+      logDays: log ? Object.keys(log.days).length : 0
     },
     products,
     plannerState,
-    recipes
+    recipes,
+    log: log ?? { days: {} }
   };
 }
 
@@ -53,6 +53,8 @@ export function parseBackup(data, labels) {
     products,
     plannerState,
     recipes,
+    // older backups have no log: null means "leave the current log alone"
+    log: data.log === undefined ? null : normalizeLog(data.log),
     exportedAt: Number.isFinite(stamp) ? stamp : null,
     counts: { plans: plannerState.plans.length, products: products.length, recipes: recipes.length }
   };

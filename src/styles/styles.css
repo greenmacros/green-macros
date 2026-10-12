@@ -491,6 +491,37 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .label-import textarea { width: 100%; min-height: 120px; resize: vertical; padding: 10px 12px; line-height: 1.4; }
 .preview-card { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
 
+.off-credit { font-size: 0.8rem; margin: 8px 0 0; }
+.data-sources { margin-top: 8px; font-size: 0.85rem; text-align: left; max-width: 640px; margin-inline: auto; }
+.data-sources summary { cursor: pointer; text-align: center; }
+.data-sources ul { margin: 8px 0; padding-left: 18px; }
+
+/* ==============================
+   Food log
+============================== */
+.log-tab { display: flex; flex-direction: column; gap: 12px; }
+.log-date { gap: 6px; }
+.log-date input[type="date"] { padding: 6px 8px; }
+.log-add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.log-add-row .add-item { flex: 1 1 220px; }
+.log-group h3, .log-totals h3, .log-history h3 { margin: 0 0 8px; font-size: 1rem; }
+.log-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 32px; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
+.log-row:first-of-type { border-top: 0; }
+.log-name { overflow-wrap: anywhere; }
+.log-amount { display: flex; align-items: center; gap: 6px; }
+.log-amount input { width: 78px; }
+.log-macros { font-size: 0.85rem; white-space: nowrap; }
+.log-totals { display: flex; flex-direction: column; gap: 10px; }
+.log-totals-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.log-totals-head h3 { margin: 0; }
+.log-totals-grid { display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr)); gap: 6px 14px; align-items: baseline; }
+.log-hist-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; width: 100%; text-align: left; background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 8px 4px; cursor: pointer; color: var(--text); }
+.log-hist-row.on { background: var(--mint-soft); }
+@media (max-width: 760px) {
+  .log-row { grid-template-columns: minmax(0, 1fr) auto 32px; }
+  .log-macros { grid-column: 1 / -1; order: 3; white-space: normal; }
+}
+
 /* ==============================
    Toast, footer
 ============================== */

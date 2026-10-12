@@ -12,6 +12,7 @@ import FitProduct from "./planner/FitProduct";
 import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
 import WeekTab from "./week/WeekTab";
+import LogTab from "./log/LogTab";
 import PrintSheet from "./print/PrintSheet";
 import StorageNotice from "./components/StorageNotice";
 import {
@@ -24,6 +25,7 @@ import { useI18n } from "./i18n/context";
 import { MESSAGES } from "./i18n/messages";
 import { backupFilename, buildBackup, formatDateTime, parseBackup } from "./lib/backup";
 import { copyToClipboard, downloadJSON, readJSONFile } from "./lib/exporters";
+import { normalizeLog } from "./lib/log";
 import { normalizePlanner } from "./lib/plans";
 import { normalizeProducts } from "./lib/products";
 import { normalizeRecipes } from "./lib/recipes";
@@ -31,7 +33,7 @@ import { buildShareUrl, mergeShared, parseShare } from "./lib/share";
 import { STORAGE_KEYS, loadJSON, loadString, saveJSON, saveString } from "./lib/storage";
 
 const MAX_COMFY_URL = 8000;
-const TABS = ["planner", "week", "products"];
+const TABS = ["planner", "week", "log", "products"];
 const TOUR_STEPS = [
   { id: "welcome" },
   { id: "tabs", target: ".tabs" },
@@ -40,6 +42,7 @@ const TOUR_STEPS = [
   { id: "additem", target: ".meal-card .add-item" },
   { id: "summary", target: ".daily-summary" },
   { id: "week", target: ".week-grid", tab: "week" },
+  { id: "log", target: ".log-add", tab: "log" },
   { id: "filters", target: ".products-tab .toolbar", tab: "products" },
   { id: "manual", target: ".products-tab .heading-actions" },
   { id: "addpanel", target: ".add-panel" },
@@ -83,6 +86,7 @@ export default function App() {
   });
   const [products, setProducts] = useState(() => normalizeProducts(loadJSON(STORAGE_KEYS.products, [])));
   const [recipes, setRecipes] = useState(() => normalizeRecipes(loadJSON(STORAGE_KEYS.recipes, [])));
+  const [log, setLog] = useState(() => normalizeLog(loadJSON(STORAGE_KEYS.log, null)));
   const [plannerState, setPlannerState] = useState(() =>
     normalizePlanner(loadJSON(STORAGE_KEYS.planner, null), labels)
   );
@@ -141,6 +145,7 @@ export default function App() {
   const hasData =
     products.length > 0 ||
     recipes.length > 0 ||
+    Object.keys(log.days).length > 0 ||
     plannerState.plans.some(p => p.data.meals.some(m => m.items.length > 0));
   const notice = pickNotice({
     ios: isIos(),
@@ -157,7 +162,7 @@ export default function App() {
   }
 
   function fullBackup() {
-    downloadJSON(buildBackup({ products, plannerState, recipes }), backupFilename());
+    downloadJSON(buildBackup({ products, plannerState, recipes, log }), backupFilename());
     setLastBackup(markBackup());
   }
 
@@ -181,12 +186,13 @@ export default function App() {
     const ok =
       saveJSON(STORAGE_KEYS.products, products) &&
       saveJSON(STORAGE_KEYS.planner, plannerState) &&
-      saveJSON(STORAGE_KEYS.recipes, recipes);
+      saveJSON(STORAGE_KEYS.recipes, recipes) &&
+      saveJSON(STORAGE_KEYS.log, log);
     if (!ok && !saveWarned.current) {
       saveWarned.current = true;
       notify(t("toast.saveFail"));
     }
-  }, [products, plannerState, recipes, notify, t]);
+  }, [products, plannerState, recipes, log, notify, t]);
 
   useEffect(() => saveString(STORAGE_KEYS.tab, tab), [tab]);
 
@@ -329,13 +335,14 @@ export default function App() {
   async function importFile(file, kind) {
     try {
       const data = await readJSONFile(file);
-      const prev = { products, plannerState, recipes };
+      const prev = { products, plannerState, recipes, log };
       const undo = {
         label: t("common.undo"),
         run: () => {
           setProducts(prev.products);
           setPlannerState(prev.plannerState);
           setRecipes(prev.recipes);
+          setLog(prev.log);
         }
       };
 
@@ -355,6 +362,7 @@ export default function App() {
         setProducts(backup.products);
         setPlannerState(backup.plannerState);
         setRecipes(backup.recipes);
+        if (backup.log) setLog(backup.log);
         notify(t("toast.restoredFrom", { when }), undo);
       }
     } catch {
@@ -491,6 +499,16 @@ export default function App() {
           setPlannerState={setPlannerState}
           onOpenPlan={openPlan}
           onPrint={() => setPrintJob({ kind: "week" })}
+        />
+      )}
+      {tab === "log" && (
+        <LogTab
+          products={products}
+          plannerState={plannerState}
+          log={log}
+          setLog={setLog}
+          notify={notify}
+          onCreateProduct={createProductFor}
         />
       )}
       {tab === "products" && (

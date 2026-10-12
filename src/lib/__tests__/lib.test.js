@@ -65,6 +65,50 @@ describe("labelParser", () => {
   });
 });
 
+describe("food log", () => {
+  const rice = { id: "r", name: "Rice", unit: "g", servingGrams: 100, cal: 130, protein: 2.7, carbs: 28, fat: 0.3 };
+
+  it("snapshots macros so later product edits don't change history", async () => {
+    const { createEntry, dayTotals } = await import("../log");
+    const entry = createEntry(rice, 200, "lunch");
+    rice.cal = 999; // edit the product afterwards
+    expect(dayTotals([entry]).cal).toBeCloseTo(260);
+    expect(dayTotals([entry]).protein).toBeCloseTo(5.4);
+    rice.cal = 130;
+  });
+  it("normalizes junk, drops empty days and bad dates", async () => {
+    const { normalizeLog } = await import("../log");
+    const log = normalizeLog({
+      days: {
+        "2026-10-04": [{ name: "Tofu", amount: 100, servingGrams: 100, cal: 76 }, null],
+        "not-a-date": [{ name: "x" }],
+        "2026-10-05": []
+      }
+    });
+    expect(Object.keys(log.days)).toEqual(["2026-10-04"]);
+    expect(log.days["2026-10-04"]).toHaveLength(1);
+    expect(normalizeLog("nope")).toEqual({ days: {} });
+  });
+  it("adds, removes and shifts days", async () => {
+    const { withDay, emptyLog, shiftDay, logSummaries, createEntry } = await import("../log");
+    let log = withDay(emptyLog(), "2026-10-04", l => [...l, createEntry(rice, 100, "snack")]);
+    expect(logSummaries(log)).toMatchObject([{ date: "2026-10-04", count: 1 }]);
+    log = withDay(log, "2026-10-04", () => []);
+    expect(log.days).toEqual({});
+    expect(shiftDay("2026-10-31", 1)).toBe("2026-11-01");
+    expect(shiftDay("2026-01-01", -1)).toBe("2025-12-31");
+  });
+  it("round-trips through a backup, and old backups leave the log alone", async () => {
+    const { createEntry, withDay, emptyLog } = await import("../log");
+    const { buildBackup, parseBackup } = await import("../backup");
+    const log = withDay(emptyLog(), "2026-10-04", l => [...l, createEntry(rice, 150, "dinner")]);
+    const file = buildBackup({ products: [rice], plannerState: normalizePlanner(null), recipes: [], log });
+    expect(parseBackup(JSON.parse(JSON.stringify(file))).log.days["2026-10-04"][0]).toMatchObject({ name: "Rice", amount: 150 });
+    const { log: _drop, ...old } = file;
+    expect(parseBackup(old).log).toBeNull();
+  });
+});
+
 describe("mergeShared", () => {
   it("re-ids clashing products and re-points imported items", () => {
     const mine = createPlan("Mine");
@@ -107,6 +151,26 @@ describe("food search", () => {
       if (fibreHeavy.has(f.en)) continue; // carbs by difference include a lot of fibre
       const est = 4 * f.protein + 4 * f.carbs + 9 * f.fat;
       expect(Math.abs(f.cal - est), f.en).toBeLessThan(Math.max(60, est * 0.4));
+    }
+  });
+});
+
+describe("MEXT food composition table", () => {
+  it("is bundled, searchable by kanji and kana, and has sane values", async () => {
+    const { searchFoods } = await import("../foods");
+    const { MEXT_FOODS } = await import("../../data/mextFoods");
+    expect(MEXT_FOODS.length).toBeGreaterThan(2000);
+    expect(searchFoods(MEXT_FOODS, "木綿豆腐")[0].ja).toContain("木綿豆腐");
+    expect(searchFoods(MEXT_FOODS, "もめんとうふ").length).toBeGreaterThan(0);
+    const tofu = MEXT_FOODS.find(f => f.ja.endsWith("木綿豆腐"));
+    expect(tofu).toMatchObject({ cal: 73, protein: 7, fat: 4.9 });
+    for (const f of MEXT_FOODS) {
+      expect(f.cal, f.ja).toBeGreaterThanOrEqual(0);
+      expect(f.cal, f.ja).toBeLessThan(950);
+      for (const k of ["protein", "carbs", "fat"]) {
+        expect(f[k], `${f.ja} ${k}`).toBeGreaterThanOrEqual(0);
+        expect(f[k], `${f.ja} ${k}`).toBeLessThanOrEqual(100);
+      }
     }
   });
 });
@@ -192,7 +256,7 @@ describe("full backup with dates", () => {
   it("stamps the file and round-trips", async () => {
     const { buildBackup, parseBackup } = await import("../backup");
     const file = buildBackup(state(), new Date("2026-10-04T12:34:56Z"));
-    expect(file).toMatchObject({ app: "GreenMacros", version: 2, exportedAt: "2026-10-04T12:34:56.000Z", counts: { plans: 1, products: 1, recipes: 0 } });
+    expect(file).toMatchObject({ app: "GreenMacros", version: 3, exportedAt: "2026-10-04T12:34:56.000Z", counts: { plans: 1, products: 1, recipes: 0 } });
     const back = parseBackup(JSON.parse(JSON.stringify(file)));
     expect(back.exportedAt).toBe(Date.parse("2026-10-04T12:34:56Z"));
     expect(back.products[0].name).toBe("Rice");

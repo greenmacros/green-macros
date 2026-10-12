@@ -24,9 +24,10 @@ export default function FoodSearch({ existingNames = [], onAdd, onAddMany, notif
   const results = useMemo(() => (foods ? searchFoods(foods, query, region, query.trim() ? 40 : 6) : []), [foods, query, region]);
   const have = useMemo(() => new Set(existingNames.map(fold)), [existingNames]);
 
-  const nameFor = f => (lang === "ja" ? f.ja : f.en);
+  // MEXT rows have no English name: show the Japanese one rather than nothing
+  const nameFor = f => (lang === "ja" ? f.ja : f.en || f.ja);
   const otherName = f => (lang === "ja" ? f.en : f.ja);
-  const key = f => `${f.region}:${f.en}`;
+  const key = f => `${f.region}:${f.en || f.ja}`;
 
   function add(f) {
     onAdd(
@@ -81,7 +82,8 @@ export default function FoodSearch({ existingNames = [], onAdd, onAddMany, notif
           return (
             <div key={key(f)} className="off-row">
               <div>
-                {nameFor(f)} <small className="muted">· {otherName(f)}</small>
+                {nameFor(f)}
+                {otherName(f) && otherName(f) !== nameFor(f) && <small className="muted"> · {otherName(f)}</small>}
               </div>
               <div className="muted">
                 {t("foods.per100")} · {f.cal} {t("unit.kcal")} · {t("macro.p")} {f.protein} · {t("macro.c")} {f.carbs} · {t("macro.f")} {f.fat}

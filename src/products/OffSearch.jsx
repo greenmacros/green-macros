@@ -26,6 +26,15 @@ function toProduct(p, preferJa) {
   });
 }
 
+/** EAN-8 / UPC-A / EAN-13 / GTIN-14 (JAN is EAN-13): digits only, with a valid check digit. */
+export function validBarcode(code) {
+  if (!/^\d{8}$|^\d{12,14}$/.test(code)) return false;
+  const digits = [...code].map(Number);
+  const check = digits.pop();
+  const sum = digits.reverse().reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
 export default function OffSearch({ onAdd }) {
   const { t, lang } = useI18n();
   const [query, setQuery] = useState("");
@@ -33,6 +42,9 @@ export default function OffSearch({ onAdd }) {
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [added, setAdded] = useState(() => new Set());
+  const [barcode, setBarcode] = useState("");
+  const [barcodeMsg, setBarcodeMsg] = useState(""); // "" | "invalid" | "notFound"
+  const [notFoundCode, setNotFoundCode] = useState("");
   const abortRef = useRef(null);
   const preferJa = lang === "ja" || region === "jp";
 
@@ -42,6 +54,11 @@ export default function OffSearch({ onAdd }) {
     e?.preventDefault();
     const q = query.trim();
     if (!q) return;
+    const asCode = q.replace(/[\s-]/g, "").normalize("NFKC");
+    // a pasted barcode number in the main box does a barcode lookup instead of a text search
+    if (/^\d{8,14}$/.test(asCode) && validBarcode(asCode)) return runBarcode(asCode);
+    setBarcodeMsg("");
+    setNotFoundCode("");
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -55,6 +72,35 @@ export default function OffSearch({ onAdd }) {
       if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
       setResults((data.products || []).filter(p => displayName(p, preferJa)));
+      setStatus("done");
+    } catch (err) {
+      if (err.name !== "AbortError") setStatus("error");
+    }
+  }
+
+  function lookupBarcode(e) {
+    e.preventDefault();
+    const code = barcode.replace(/[\s-]/g, "").normalize("NFKC");
+    setBarcodeMsg("");
+    setNotFoundCode("");
+    if (!validBarcode(code)) return setBarcodeMsg("invalid");
+    runBarcode(code);
+  }
+
+  async function runBarcode(code) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStatus("loading");
+    try {
+      const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=code,product_name,product_name_ja,brands,nutriments`;
+      const res = await fetch(url, { signal: controller.signal });
+      const data = res.ok || res.status === 404 ? await res.json() : null;
+      if (!data) throw new Error(res.statusText);
+      const found = data.status === 1 && data.product && displayName(data.product, preferJa);
+      setResults(found ? [{ ...data.product, code }] : []);
+      setBarcodeMsg(found ? "" : "notFound");
+      setNotFoundCode(found ? "" : code);
       setStatus("done");
     } catch (err) {
       if (err.name !== "AbortError") setStatus("error");
@@ -78,8 +124,32 @@ export default function OffSearch({ onAdd }) {
         </button>
       </form>
 
+      <form className="search-row" onSubmit={lookupBarcode}>
+        <input
+          inputMode="numeric"
+          placeholder={t("barcode.placeholder")}
+          aria-label={t("barcode.label")}
+          value={barcode}
+          onChange={e => setBarcode(e.target.value)}
+        />
+        <button type="submit" disabled={!barcode.trim() || status === "loading"}>{t("barcode.lookup")}</button>
+      </form>
+      {barcodeMsg === "invalid" && <div className="hint warn">{t("barcode.invalid")}</div>}
+      {barcodeMsg === "notFound" && (
+        <div className="hint warn">
+          {t("barcode.notFound")}{" "}
+          <a
+            href={`https://world.openfoodfacts.org/cgi/product.pl?type=product&code=${notFoundCode}`}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            {t("barcode.contribute")}
+          </a>
+        </div>
+      )}
+
       {status === "error" && <div className="hint warn">{t("off.error")}</div>}
-      {status === "done" && !results.length && <div className="muted">{t("foods.none")}</div>}
+      {status === "done" && !results.length && !barcodeMsg && <div className="muted">{t("foods.none")}</div>}
 
       {results.map(p => {
         const kcal = offKcal(p.nutriments);
@@ -106,6 +176,12 @@ export default function OffSearch({ onAdd }) {
           </div>
         );
       })}
+
+      <p className="muted off-credit">
+        {t("off.credit")}{" "}
+        <a href="https://world.openfoodfacts.org/" target="_blank" rel="noreferrer noopener">Open Food Facts</a>{" · "}
+        <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noreferrer noopener">ODbL</a>
+      </p>
     </div>
   );
 }

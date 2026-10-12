@@ -14,6 +14,7 @@ export const MESSAGES = {
   /* tabs / days */
   "tab.planner": m("Plan", "プラン"),
   "tab.week": m("Week", "週間"),
+  "tab.log": m("Log", "記録"),
   "tab.products": m("Products", "食品"),
   "day.0": m("Mon", "月"),
   "day.1": m("Tue", "火"),
@@ -263,9 +264,24 @@ export const MESSAGES = {
   ),
 
   /* Open Food Facts */
-  "off.placeholder": m("e.g. oat milk, 納豆, tempeh…", "例：豆乳、納豆、oat milk…"),
+  "off.placeholder": m("e.g. oat milk, 納豆, or a barcode number…", "例：豆乳、納豆、またはバーコード番号…"),
   "off.search": m("Search", "検索"),
   "off.searching": m("Searching…", "検索中…"),
+  "barcode.label": m("Barcode number", "バーコード番号"),
+  "barcode.placeholder": m("Or type a barcode number (JAN / EAN), e.g. 4901234567894", "またはバーコード番号（JAN / EAN）を入力　例：4901234567894"),
+  "barcode.lookup": m("Look up", "検索"),
+  "barcode.invalid": m("That doesn't look like a valid barcode — check the digits (8, 12 or 13 numbers).", "有効なバーコード番号ではないようです。桁数（8・12・13桁）と数字を確認してください。"),
+  "barcode.notFound": m("No product with this barcode in Open Food Facts. Try the Label tab or add it by hand.", "このバーコードの商品は Open Food Facts に見つかりません。「ラベル」タブで読み取るか、手入力してください。"),
+  "off.credit": m("Product data from", "商品データ提供："),
+  "barcode.contribute": m("Add it to Open Food Facts", "Open Food Facts に登録する"),
+  "sources.title": m("Data sources & credits", "データの出典・クレジット"),
+  "sources.mext.name": m("Standard Tables of Food Composition in Japan (8th revised, 2023 supplement), MEXT", "日本食品標準成分表（八訂）増補2023年 文部科学省"),
+  "sources.mext.note": m("source: MEXT website; values rounded and edited by GreenMacros", "出典：文部科学省ホームページ（GreenMacros が丸め・加工しています）"),
+  "sources.usda.name": m("USDA FoodData Central", "USDA FoodData Central"),
+  "sources.usda.note": m("public domain; values rounded", "パブリックドメイン（値は丸めています）"),
+  "sources.off.name": m("Open Food Facts", "Open Food Facts"),
+  "sources.off.note": m("barcode and product lookup, ODbL licence, contributed by volunteers", "バーコード・商品検索。ODbL ライセンス、ボランティアによる投稿データ"),
+  "sources.verify": m("Values can be incomplete or out of date — always check the package label.", "値が不完全・古い場合があります。必ず商品パッケージの表示をご確認ください。"),
   "off.import": m("Import", "取り込む"),
   "off.error": m(
     "Couldn't reach Open Food Facts. Check your connection and try again.",
@@ -287,8 +303,8 @@ export const MESSAGES = {
   ),
   "tour.tabs.title": m("Three tabs", "3つのタブ"),
   "tour.tabs.body": m(
-    "Plan is for building a day of meals, Week assigns plans to days, and Products is your food list.",
-    "「プラン」は1日の食事を作る場所、「週間」はプランを曜日に割り当て、「食品」は食品リストです。"
+    "Plan is for building a day of meals, Week assigns plans to days, Log records what you ate, and Products is your food list.",
+    "「プラン」は1日の食事を作る場所、「週間」はプランを曜日に割り当て、「記録」は食べたものの記録、「食品」は食品リストです。"
   ),
   "tour.plans.title": m("Plans", "プラン"),
   "tour.plans.body": m(
@@ -315,6 +331,11 @@ export const MESSAGES = {
     "Assign one of your plans to each day, leave a day as rest, and print the whole week.",
     "各曜日にプランを割り当て、休息日はそのままにして、1週間分を印刷できます。"
   ),
+  "tour.log.title": m("Food log", "食事記録"),
+  "tour.log.body": m(
+    "Record what you actually ate each day, or copy a plan into a day and adjust it. Targets are shown for reference only.",
+    "毎日実際に食べたものを記録できます。プランを日にコピーして調整することもできます。目標は参考表示のみです。"
+  ),
   "tour.filters.title": m("Find products", "食品を探す"),
   "tour.filters.body": m(
     "Search, sort and filter your list by category, and switch between list views.",
@@ -340,6 +361,37 @@ export const MESSAGES = {
     "Your data is stored only in this browser. Export a backup here regularly, and restore or import files too.",
     "データはこのブラウザにのみ保存されます。ここから定期的にバックアップを書き出し、復元や読み込みもできます。"
   ),
+
+  /* food log */
+  "log.title": m("Food log", "食事記録"),
+  "log.help": m(
+    "Record what you actually ate. Entries are saved as they were, so editing a product later won't change past days. Plan targets are shown for reference only.",
+    "実際に食べたものを記録します。記録は当時の値で保存され、後で食品を編集しても過去の日は変わりません。プランの目標は参考表示のみです。"
+  ),
+  "log.date": m("Date", "日付"),
+  "log.prev": m("Previous day", "前の日"),
+  "log.next": m("Next day", "次の日"),
+  "log.today": m("Today", "今日"),
+  "log.mealLabel": m("Meal", "食事"),
+  "log.meal.breakfast": m("Breakfast", "朝食"),
+  "log.meal.lunch": m("Lunch", "昼食"),
+  "log.meal.dinner": m("Dinner", "夕食"),
+  "log.meal.snack": m("Snack", "間食"),
+  "log.addItem": m("Add what you ate…", "食べたものを追加…"),
+  "log.copyPlan": m("Copy from plan", "プランからコピー"),
+  "log.copied": m("Added {name} from {plan} ({n} item(s))", "{plan} の {name} を追加しました（{n} 件）"),
+  "log.planEmpty": m("No items to copy.", "コピーできる食品がありません。"),
+  "log.empty": m("Nothing logged for this day yet.", "この日はまだ記録がありません。"),
+  "log.totals": m("Day total", "1日の合計"),
+  "log.compare": m("Show targets from", "目標を表示"),
+  "log.noCompare": m("No plan", "なし"),
+  "log.actual": m("Eaten", "摂取"),
+  "log.target": m("Target", "目標"),
+  "log.clearDay": m("Clear this day", "この日を消去"),
+  "log.confirmClear": m("Remove every entry for this day?", "この日の記録をすべて削除しますか？"),
+  "log.cleared": m("Day cleared", "この日の記録を消去しました"),
+  "log.history": m("Recent days", "最近の記録"),
+  "log.noHistory": m("Days you log will show up here.", "記録した日がここに表示されます。"),
 
   /* label import */
   "label.placeholder": m(

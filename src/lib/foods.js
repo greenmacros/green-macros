@@ -2,9 +2,15 @@
 
 let cache = null;
 
-/** Lazy-loads the bundled food list so it stays out of the main chunk. */
+/**
+ * Lazy-loads the bundled food lists so they stay out of the main chunk: the hand-picked list
+ * first (so it ranks first on ties), then the full MEXT Japan food composition table.
+ */
 export async function loadFoods() {
-  if (!cache) cache = (await import("../data/foods.js")).FOODS;
+  if (!cache) {
+    const [{ FOODS }, { MEXT_FOODS }] = await Promise.all([import("../data/foods.js"), import("../data/mextFoods.js")]);
+    cache = [...FOODS, ...MEXT_FOODS];
+  }
   return cache;
 }
 

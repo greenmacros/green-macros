@@ -2,6 +2,8 @@ export const STORAGE_KEYS = {
   products: "greenMacros_products",
   planner: "greenMacros_planner",
   recipes: "greenMacros_recipes",
+  log: "greenMacros_log",
+  logPlan: "gm_logPlan",
   visited: "gm_hasVisited",
   tab: "gm_tab",
   productSort: "productSort"
