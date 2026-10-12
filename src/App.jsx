@@ -7,7 +7,9 @@ import Menu from "./components/Menu";
 import ShareImportModal from "./components/ShareImportModal";
 import Icon from "./components/Icon";
 import Tour from "./components/Tour";
+import InstallHelp from "./components/InstallHelp";
 import Toast from "./components/Toast";
+import UpdateBanner from "./components/UpdateBanner";
 import FitProduct from "./planner/FitProduct";
 import PlannerTab from "./planner/PlannerTab";
 import ProductsTab from "./products/ProductsTab";
@@ -20,6 +22,7 @@ import {
   isIos, isStandalone, markBackup, pickNotice, requestPersistence
 } from "./lib/persistence";
 import { useTheme } from "./theme/useTheme";
+import { APP_BUILD, APP_VERSION, checkForUpdate } from "./lib/version";
 import { buildProductMap } from "./lib/macros";
 import { useI18n } from "./i18n/context";
 import { MESSAGES } from "./i18n/messages";
@@ -97,6 +100,9 @@ export default function App() {
   const [tourOpen, setTourOpen] = useState(false);
   const [visited, setVisited] = useState(() => Boolean(loadString(STORAGE_KEYS.visited)));
   const [installEvent, setInstallEvent] = useState(null);
+  const [installHelp, setInstallHelp] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
+  const [installed, setInstalled] = useState(isStandalone);
   const { theme, toggle: toggleTheme } = useTheme();
   const [printJob, setPrintJob] = useState(null);
   const [fitDialog, setFitDialog] = useState(null); // null | { product }
@@ -133,9 +139,39 @@ export default function App() {
       e.preventDefault();
       setInstallEvent(e);
     };
+    const onInstalled = () => {
+      setInstalled(true);
+      setInstallEvent(null);
+    };
     window.addEventListener("beforeinstallprompt", onPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
+
+  /* ---------- update check: on start, then whenever the app comes back to the foreground ---------- */
+  const lastCheck = useRef(0);
+  const runUpdateCheck = useCallback(async ({ manual = false } = {}) => {
+    lastCheck.current = Date.now();
+    const { status } = await checkForUpdate(import.meta.env.BASE_URL);
+    if (status === "new") setUpdateReady(true);
+    else if (manual) notify(status === "same" ? t("update.upToDate") : t("update.unknown"));
+  }, [notify, t]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    const first = setTimeout(runUpdateCheck, 4000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastCheck.current > 30 * 60 * 1000) runUpdateCheck();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(first);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [runUpdateCheck]);
 
   /* ---------- keep data safe: persistent storage + backup reminders ---------- */
   useEffect(() => {
@@ -432,20 +468,26 @@ export default function App() {
             <button onClick={() => pickFile("products")}>{t("backup.importProducts")}</button>
             <button onClick={() => pickFile("plans")}>{t("backup.importPlans")}</button>
             <button onClick={() => pickFile("all")}>{t("backup.restore")}</button>
-            {installEvent && (
-              <>
-                <hr />
-                <button
-                  onClick={async () => {
-                    installEvent.prompt();
-                    await installEvent.userChoice;
-                    setInstallEvent(null);
-                  }}
-                >
-                  {t("backup.install")}
-                </button>
-              </>
+            <hr />
+            {!installed && installEvent && (
+              <button
+                onClick={async () => {
+                  installEvent.prompt();
+                  await installEvent.userChoice;
+                  setInstallEvent(null);
+                }}
+              >
+                {t("backup.install")}
+              </button>
             )}
+            {!installed && !installEvent && isIos() && (
+              <button onClick={() => setInstallHelp(true)}>{t("backup.install")}</button>
+            )}
+            <button onClick={() => runUpdateCheck({ manual: true })}>{t("update.check")}</button>
+            <div className="menu-note">
+              {t("update.version", { v: APP_VERSION })}
+              {APP_BUILD ? ` · ${formatDateTime(APP_BUILD, lang)}` : ""}
+            </div>
           </Menu>
           <button type="button" className="icon-btn tour-btn" title={t("tour.button")} aria-label={t("tour.button")} onClick={() => setTourOpen(true)}>?</button>
           <LangSwitch />
@@ -467,6 +509,9 @@ export default function App() {
           />
         ))}
       </header>
+
+      {updateReady && <UpdateBanner onReload={() => window.location.reload()} onLater={() => setUpdateReady(false)} />}
+      {installHelp && <InstallHelp onClose={() => setInstallHelp(false)} />}
 
       <StorageNotice
         kind={notice}

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { plansToCSV } from "../exporters";
 import { parseLabel } from "../labelParser";
-import { buildProductMap, calcMacros, sumMeals } from "../macros";
+import { buildProductMap, calcMacros } from "../macros";
 import { createItem, createMeal, createPlan, normalizePlanner } from "../plans";
 import { normalizeProducts } from "../products";
 import { mergeShared } from "../share";
@@ -184,6 +184,16 @@ describe("barcodes", () => {
     expect(cleanBarcode("４９０２ 1020-72618")).toBe("4902102072618");
     expect(offAddUrl("4902102072618")).toContain("code=4902102072618");
     expect(offAddUrl("nope", "ja")).toBe("https://jp.openfoodfacts.org/cgi/product.pl?type=product");
+  });
+});
+
+describe("version check", () => {
+  it("compares the running build with the deployed one", async () => {
+    const { compareBuild } = await import("../version");
+    expect(compareBuild({ build: "b" }, "a")).toBe("new");
+    expect(compareBuild({ build: "a" }, "a")).toBe("same");
+    expect(compareBuild(null, "a")).toBe("unknown");
+    expect(compareBuild({ build: "a" }, "")).toBe("unknown");
   });
 });
 

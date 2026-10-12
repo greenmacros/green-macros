@@ -23,7 +23,7 @@ function fatValue(t) {
 }
 
 export function parseLabel(raw) {
-  // NFKC folds full-width colons/spaces/digits (：　１) to their ASCII forms
+  // NFKC folds full-width colons, spaces and digits to their ASCII forms
   const t = raw.normalize("NFKC").toLowerCase().replace(/[ \t]+/g, " ");
 
   let cal = first(t, [
