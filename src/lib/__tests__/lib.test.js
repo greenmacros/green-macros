@@ -6,6 +6,7 @@ import { buildProductMap, calcMacros, sumMeals } from "../macros";
 import { createItem, createMeal, createPlan, normalizePlanner } from "../plans";
 import { normalizeProducts } from "../products";
 import { mergeShared } from "../share";
+import { encodeNutrition, greenCoachLink, weekNutrition } from "../greencoach";
 
 const rice = { id: "r", name: "Rice", unit: "g", servingGrams: 100, cal: 130, protein: 3, carbs: 28, fat: 0.3 };
 const tofu = { id: "t", name: "Tofu", unit: "g", servingGrams: 100, cal: 76, protein: 8, carbs: 2, fat: 5 };
@@ -340,5 +341,21 @@ describe("findDuplicateGroups", () => {
   it("finds nothing when everything is distinct", async () => {
     const { findDuplicateGroups } = await import("../duplicates");
     expect(findDuplicateGroups([mk("1", "A"), mk("2", "B", { cal: 1 })])).toEqual([]);
+  });
+});
+
+describe("GreenCoach link", () => {
+  it("sends the planned totals per weekday and the plan targets, nothing else", () => {
+    const plan = createPlan("Training day", { profile: { calories: 2500, protein: 150 }, meals: [createMeal("M", [createItem("r", 300), createItem("t", 200)])] });
+    const state = { plans: [plan], activePlanId: plan.id, week: [plan.id, null, plan.id, null, null, null, null] };
+    const w = weekNutrition(state, [rice, tofu], new Date("2026-10-12T00:00:00Z"));
+    expect(w.days[0]).toEqual([542, 25, 88, 10.9]);
+    expect(w.days[1]).toBeNull();
+    expect(w.targets[0]).toEqual([2500, 150, 0, 0]);
+    expect(JSON.stringify(w)).not.toContain("Training day");
+    const code = greenCoachLink(w).split("#nutrition=")[1];
+    const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(code.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0))));
+    expect(json).toEqual(w);
+    expect(encodeNutrition(w)).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 });

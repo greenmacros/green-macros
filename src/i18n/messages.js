@@ -364,6 +364,19 @@ export const MESSAGES = {
   "plans.image": m("Save as image (PNG)", "画像として保存（PNG）"),
   "plans.print": m("Print…", "印刷…"),
   "week.print": m("Print", "印刷"),
+  "week.coach": m("Send to GreenCoach", "GreenCoachに送る"),
+  "week.coachTitle": m("Share this week with GreenCoach", "この週をGreenCoachと共有"),
+  "week.coachHelp": m(
+    "GreenCoach, the free training app, can check your planned protein and calories against your training and body weight. Open it here, or copy the link and paste it in GreenCoach (Settings → Nutrition) if you use it from your home screen.",
+    "無料のトレーニングアプリGreenCoachで、計画したたんぱく質とカロリーをトレーニングや体重と照らし合わせて確認できます。ここから開くか、ホーム画面のGreenCoachを使う場合はリンクをコピーして「設定」→「栄養」に貼り付けてください。"
+  ),
+  "week.coachOpen": m("Open GreenCoach", "GreenCoachを開く"),
+  "week.coachCopy": m("Copy link", "リンクをコピー"),
+  "week.coachCopied": m("Copied", "コピーしました"),
+  "week.coachPrivacy": m(
+    "Only the daily totals of the plans in your week are sent (calories, protein, carbs, fat). No foods, plan names or other data, and nothing is uploaded: it travels inside the link.",
+    "送るのは週のプランの1日ごとの合計（カロリー・たんぱく質・炭水化物・脂質）だけです。食品名やプラン名などは含まれず、何もアップロードされません（データはリンクの中に入っています）。"
+  ),
   "toast.imageSaved": m("Image saved", "画像を保存しました"),
   "toast.imageFail": m("Couldn't create the image", "画像を作成できませんでした"),
   "image.disclaimer": m(

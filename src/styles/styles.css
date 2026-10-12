@@ -180,6 +180,7 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 
 .tabs { display: flex; gap: 22px; }
 .tabs button {
+  white-space: nowrap; /* never break a tab name (e.g. プラン) across lines */
   background: none;
   color: var(--muted);
   min-width: 0;
@@ -528,7 +529,9 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
   .share-anchor { order: 2; }
   .settings-anchor { order: 3; }
   .tour-btn { order: 4; }
-  .tabs { order: 5; width: auto; flex: 1; }
+  /* Tabs get their own full-width row under the title, spread evenly, so no language squeezes them. */
+  .tabs { order: 5; flex: 1 1 100%; justify-content: space-around; gap: 8px; }
+  .tabs button { flex: 1; text-align: center; padding: 8px 0; }
   .lang-switch { order: 6; }
   .theme-switch { order: 7; }
 

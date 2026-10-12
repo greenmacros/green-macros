@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { greenCoachLink, weekNutrition } from "../lib/greencoach";
 import { useI18n } from "../i18n/context";
 import { MACRO_KEYS, MACRO_LABEL_KEYS, buildProductMap, emptyTotals, proximityClass, sumMeals } from "../lib/macros";
 import { WEEK_DAYS, hasTarget } from "../lib/plans";
@@ -26,12 +27,19 @@ export default function WeekTab({ products, plannerState, setPlannerState, onOpe
   const weekTotal = emptyTotals();
   assigned.forEach(p => MACRO_KEYS.forEach(k => (weekTotal[k] += totals.get(p.id)[k])));
   const n = assigned.length;
+  const [coach, setCoach] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const coachLink = coach ? greenCoachLink(weekNutrition(plannerState, products)) : "";
+  const copyCoachLink = async () => {
+    try { await navigator.clipboard.writeText(coachLink); setCopied(true); } catch { setCopied(false); }
+  };
 
   return (
     <div className="week-tab">
       <div className="tab-heading">
         <h2>{t("week.title")}</h2>
         <div className="heading-actions">
+          <button disabled={!n} onClick={() => { setCoach(c => !c); setCopied(false); }} aria-expanded={coach}>{t("week.coach")}</button>
           <button disabled={!n} onClick={onPrint}>{t("week.print")}</button>
           <button className="danger-btn" disabled={!n} onClick={() => setPlannerState(s => ({ ...s, week: Array(WEEK_DAYS).fill(null) }))}>
             {t("week.clear")}
@@ -39,6 +47,18 @@ export default function WeekTab({ products, plannerState, setPlannerState, onOpe
         </div>
       </div>
       <p className="muted week-help">{t("week.help")}</p>
+
+      {coach && n > 0 && (
+        <section className="glass-card" aria-label={t("week.coach")}>
+          <h3>{t("week.coachTitle")}</h3>
+          <p className="muted">{t("week.coachHelp")}</p>
+          <div className="heading-actions">
+            <button className="primary-btn" onClick={() => window.open(coachLink, "_blank", "noopener")}>{t("week.coachOpen")}</button>
+            <button onClick={() => void copyCoachLink()}>{copied ? t("week.coachCopied") : t("week.coachCopy")}</button>
+          </div>
+          <p className="muted"><small>{t("week.coachPrivacy")}</small></p>
+        </section>
+      )}
 
       <div className="week-grid">
         {Array.from({ length: WEEK_DAYS }, (_, i) => {
