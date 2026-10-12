@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../i18n/context";
+import { cleanBarcode, offAddUrl, validBarcode } from "../lib/barcode";
 import { createProduct } from "../lib/products";
 
 const round1 = n => Math.round(n * 10) / 10;
@@ -26,15 +27,6 @@ function toProduct(p, preferJa) {
   });
 }
 
-/** EAN-8 / UPC-A / EAN-13 / GTIN-14 (JAN is EAN-13): digits only, with a valid check digit. */
-export function validBarcode(code) {
-  if (!/^\d{8}$|^\d{12,14}$/.test(code)) return false;
-  const digits = [...code].map(Number);
-  const check = digits.pop();
-  const sum = digits.reverse().reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0);
-  return (10 - (sum % 10)) % 10 === check;
-}
-
 export default function OffSearch({ onAdd }) {
   const { t, lang } = useI18n();
   const [query, setQuery] = useState("");
@@ -54,7 +46,7 @@ export default function OffSearch({ onAdd }) {
     e?.preventDefault();
     const q = query.trim();
     if (!q) return;
-    const asCode = q.replace(/[\s-]/g, "").normalize("NFKC");
+    const asCode = cleanBarcode(q);
     // a pasted barcode number in the main box does a barcode lookup instead of a text search
     if (/^\d{8,14}$/.test(asCode) && validBarcode(asCode)) return runBarcode(asCode);
     setBarcodeMsg("");
@@ -80,7 +72,7 @@ export default function OffSearch({ onAdd }) {
 
   function lookupBarcode(e) {
     e.preventDefault();
-    const code = barcode.replace(/[\s-]/g, "").normalize("NFKC");
+    const code = cleanBarcode(barcode);
     setBarcodeMsg("");
     setNotFoundCode("");
     if (!validBarcode(code)) return setBarcodeMsg("invalid");
@@ -139,7 +131,7 @@ export default function OffSearch({ onAdd }) {
         <div className="hint warn">
           {t("barcode.notFound")}{" "}
           <a
-            href={`https://world.openfoodfacts.org/cgi/product.pl?type=product&code=${notFoundCode}`}
+            href={offAddUrl(notFoundCode, lang)}
             target="_blank"
             rel="noreferrer noopener"
           >

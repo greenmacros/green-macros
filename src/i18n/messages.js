@@ -398,6 +398,19 @@ export const MESSAGES = {
     "Seitan Strips\nServing size 85g\nCalories 120\nProtein 21g\nTotal Carbohydrate 4g\nTotal Fat 2g",
     "大豆ミート\n1食分 85g\nエネルギー 120kcal\nたんぱく質 21g\n脂質 2g\n炭水化物 4g"
   ),
+  "label.barcodeOptional": m("Barcode number (optional, for sharing with Open Food Facts)", "バーコード番号（任意・Open Food Facts への共有用）"),
+  "contribute.added": m("Added “{name}”.", "「{name}」を追加しました。"),
+  "contribute.why": m(
+    "Not in Open Food Facts yet? Adding it there helps everyone find it by barcode, and keeps the data free and open.",
+    "Open Food Facts にまだない商品なら、そこに登録するとバーコードで誰でも見つけられるようになります。"
+  ),
+  "contribute.open": m("Add to Open Food Facts", "Open Food Facts に登録する"),
+  "contribute.copy": m("Copy label text", "ラベルのテキストをコピー"),
+  "contribute.copied": m("✓ Copied", "✓ コピーしました"),
+  "contribute.note": m(
+    "Opens their site in a new tab. You'll need a free account, and it works best with the barcode and a photo of the package. Only share products you have on hand.",
+    "新しいタブで Open Food Facts を開きます。無料アカウントが必要です。バーコードとパッケージの写真があるとスムーズです。お手元にある商品のみ登録してください。"
+  ),
   "label.read": m("Read label", "読み取る"),
   "label.missing": m("Couldn't find: {fields}. Fill them in below.", "見つかりません：{fields}。下で入力してください。"),
   "label.assumed": m("No serving size found — assuming 100. Adjust if needed.", "基準量が見つからないため 100 としています。必要なら修正してください。"),

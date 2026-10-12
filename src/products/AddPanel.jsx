@@ -27,7 +27,7 @@ export default function AddPanel({ products, names, recipes, setRecipes, onAdd, 
       </div>
       {tab === "foods" && <FoodSearch existingNames={names} onAdd={onAdd} onAddMany={onAddMany} notify={notify} />}
       {tab === "online" && <OffSearch onAdd={onAdd} />}
-      {tab === "label" && <LabelImport existingNames={names} onAdd={onAdd} />}
+      {tab === "label" && <LabelImport existingNames={names} onAdd={onAdd} contribute />}
       {tab === "recipes" && <RecipesCard recipes={recipes} setRecipes={setRecipes} products={products} notify={notify} />}
     </section>
   );

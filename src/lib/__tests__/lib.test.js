@@ -175,6 +175,18 @@ describe("MEXT food composition table", () => {
   });
 });
 
+describe("barcodes", () => {
+  it("validates JAN/EAN check digits and cleans pasted input", async () => {
+    const { validBarcode, cleanBarcode, offAddUrl } = await import("../barcode");
+    expect(validBarcode("4902102072618")).toBe(true);
+    expect(validBarcode("4902102072619")).toBe(false);
+    expect(validBarcode("12345")).toBe(false);
+    expect(cleanBarcode("４９０２ 1020-72618")).toBe("4902102072618");
+    expect(offAddUrl("4902102072618")).toContain("code=4902102072618");
+    expect(offAddUrl("nope", "ja")).toBe("https://jp.openfoodfacts.org/cgi/product.pl?type=product");
+  });
+});
+
 describe("food CSV import", () => {
   it("reads English headers", async () => {
     const { parseFoodsCsv } = await import("../foodCsv");

@@ -491,6 +491,8 @@ button.danger:hover:not(:disabled), .danger-btn:hover:not(:disabled) { backgroun
 .label-import textarea { width: 100%; min-height: 120px; resize: vertical; padding: 10px 12px; line-height: 1.4; }
 .preview-card { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
 
+.contribute-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.contribute-actions a { text-decoration: none; display: inline-flex; align-items: center; }
 .off-credit { font-size: 0.8rem; margin: 8px 0 0; }
 .data-sources { margin-top: 8px; font-size: 0.85rem; text-align: left; max-width: 640px; margin-inline: auto; }
 .data-sources summary { cursor: pointer; text-align: center; }
